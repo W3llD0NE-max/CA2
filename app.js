@@ -8,10 +8,11 @@ const app = express();
 const PORT = 3000;
 
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'toystore_db'
+    host: 'rdksq2.h.filess.io',
+    user: 'Team2CA2_swimmingbe',
+    password: '5a49db4b01b0fd0a8023c3da5e90007105eed760',
+    database: 'Team2CA2_swimmingbe',
+    port: 3307,
 });
 
 db.connect((err) => {
