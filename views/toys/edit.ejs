@@ -1,0 +1,37 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <h2>Edit Toy</h2>
+    
+    <form action="/toys/<%= toy.id %>" method="POST">
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" name="name" class="form-control" value="<%= toy.name %>" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Category</label>
+            <select name="category" class="form-control" required>
+                <option value="Action Figures" <%= toy.category === 'Action Figures' ? 'selected' : '' %>>Action Figures</option>
+                <option value="Building Sets" <%= toy.category === 'Building Sets' ? 'selected' : '' %>>Building Sets</option>
+                <option value="Dolls" <%= toy.category === 'Dolls' ? 'selected' : '' %>>Dolls</option>
+                <option value="Educational" <%= toy.category === 'Educational' ? 'selected' : '' %>>Educational</option>
+                <option value="Outdoor" <%= toy.category === 'Outdoor' ? 'selected' : '' %>>Outdoor</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Price ($)</label>
+            <input type="number" step="0.01" name="price" class="form-control" value="<%= toy.price %>" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Description</label>
+            <textarea name="description" class="form-control" rows="3" required><%= toy.description %></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Update Toy</button>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>
