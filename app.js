@@ -89,6 +89,99 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
+app.get('/admin', isLoggedIn, isAdmin, (req, res) => {
+    db.query('SELECT * FROM users', (err, users) => {
+        if (err) throw err;
+        db.query('SELECT * FROM toys', (err, toys) => {
+            if (err) throw err;
+            res.render('admin/dashboard', { 
+                users, 
+                toys,
+                user: req.session.user 
+            });
+        });
+    });
+});
+
+
+app.get('/toys/new', isLoggedIn, (req, res) => {
+    res.render('toys/new', { user: req.session.user });
+});
+
+
+app.post('/toys', isLoggedIn, (req, res) => {
+    const { name, category, price, description } = req.body;
+    db.query(
+        'INSERT INTO toys (name, category, price, description, user_id) VALUES (?, ?, ?, ?, ?)',
+        [name, category, price, description, req.session.user.id],
+        (err) => {
+            if (err) throw err;
+            res.redirect('/toys');
+        }
+    );
+});
+
+
+app.get('/toys/:id/edit', isLoggedIn, (req, res) => {
+    db.query('SELECT * FROM toys WHERE id = ?', [req.params.id], (err, results) => {
+        if (err) throw err;
+        if (results.length === 0) return res.status(404).send('Toy not found');
+        res.render('toys/edit', { toy: results[0], user: req.session.user });
+    });
+});
+
+
+app.post('/toys/:id', isLoggedIn, (req, res) => {
+    const { name, category, price, description } = req.body;
+    db.query(
+        'UPDATE toys SET name = ?, category = ?, price = ?, description = ? WHERE id = ?',
+        [name, category, price, description, req.params.id],
+        (err) => {
+            if (err) throw err;
+            res.redirect('/toys');
+        }
+    );
+});
+
+
+app.post('/toys/:id/delete', isLoggedIn, (req, res) => {
+    if (req.session.user.role === 'admin') {
+        db.query('DELETE FROM toys WHERE id = ?', [req.params.id], (err) => {
+            if (err) throw err;
+            res.redirect('/toys');
+        });
+    } else {
+        db.query('DELETE FROM toys WHERE id = ? AND user_id = ?', 
+            [req.params.id, req.session.user.id], 
+            (err) => {
+                if (err) throw err;
+                res.redirect('/toys');
+            }
+        );
+    }
+});
+
+app.get('/toys/search', isLoggedIn, (req, res) => {
+    const { q, category } = req.query;
+    let query = 'SELECT * FROM toys WHERE 1=1';
+    const params = [];
+    
+    if (q) {
+        query += ' AND (name LIKE ? OR description LIKE ?)';
+        params.push(`%${q}%`, `%${q}%`);
+    }
+    
+    if (category) {
+        query += ' AND category = ?';
+        params.push(category);
+    }
+    
+    db.query(query, params, (err, toys) => {
+        if (err) throw err;
+        res.render('toys/index', { toys, user: req.session.user });
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
