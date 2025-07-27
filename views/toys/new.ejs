@@ -1,37 +1,34 @@
 <%- include('../partials/header') %>
 
 <div class="container mt-4">
-    <h2>Add New Toy</h2>
+  <h2 class="text-center mb-4">Add New Toy</h2>
+  <form action="/toys" method="POST" class="mx-auto" style="max-width: 500px;">
     
-    <form action="/toys" method="POST">
-        <div class="form-group">
-            <label>Name</label>
-            <input type="text" name="name" class="form-control" required>
-        </div>
-        
-        <div class="form-group">
-            <label>Category</label>
-            <select name="category" class="form-control" required>
-                <option value="Action Figures">Action Figures</option>
-                <option value="Building Sets">Building Sets</option>
-                <option value="Dolls">Dolls</option>
-                <option value="Educational">Educational</option>
-                <option value="Outdoor">Outdoor</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label>Price ($)</label>
-            <input type="number" step="0.01" name="price" class="form-control" required>
-        </div>
-        
-        <div class="form-group">
-            <label>Description</label>
-            <textarea name="description" class="form-control" rows="3" required></textarea>
-        </div>
-        
-        <button type="submit" class="btn btn-primary">Add Toy</button>
-    </form>
+    <div class="mb-3">
+      <label for="name" class="form-label">Toy Name</label>
+      <input type="text" class="form-control" id="name" name="name" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="category" class="form-label">Category</label>
+      <input type="text" class="form-control" id="category" name="category" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="price" class="form-label">Price ($)</label>
+      <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+    </div>
+
+    <div class="d-grid">
+      <button type="submit" class="btn btn-primary">Add Toy</button>
+    </div>
+
+  </form>
 </div>
 
 <%- include('../partials/footer') %>
