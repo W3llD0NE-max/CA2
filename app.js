@@ -65,17 +65,18 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-    const { email, password, role } = req.body;
+    const { username, email, password, role } = req.body;
     const hashed = await bcrypt.hash(password, 10);
-    db.query('INSERT INTO users (email, password, role) VALUES (?, ?, ?)', [email, hashed, role], (err) => {
+    db.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', [username, email, hashed, role], (err) => {
         if (err) throw err;
         res.redirect('/login');
     });
 });
 
 app.get('/dashboard', isLoggedIn, (req, res) => {
-    res.render('dashboard', { user: req.session.user });
+    res.redirect('admin/dashboard');
 });
+
 
 app.get('/toys', isLoggedIn, (req, res) => {
     db.query('SELECT * FROM toys', (err, toys) => {
@@ -104,12 +105,12 @@ app.get('/admin', isLoggedIn, isAdmin, (req, res) => {
 });
 
 
-app.get('/toys/new', isLoggedIn, (req, res) => {
+app.get('/toys/new', isLoggedIn, isAdmin, (req, res) => {
     res.render('toys/new', { user: req.session.user });
 });
 
 
-app.post('/toys', isLoggedIn, (req, res) => {
+app.post('/toys', isLoggedIn, isAdmin, (req, res) => {
     const { name, category, price, description } = req.body;
     db.query(
         'INSERT INTO toys (name, category, price, description, user_id) VALUES (?, ?, ?, ?, ?)',
