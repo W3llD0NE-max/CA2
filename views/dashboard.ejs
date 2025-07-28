@@ -9,21 +9,33 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Browse Toys</h5>
-                    <p class="card-text">View all available toys in our store.</p>
-                    <a href="/toys" class="btn btn-primary">View Toys</a>
+                    <p class="card-text">View and search all available toys in our store.</p>
+                    <a href="/toys" class="btn btn-primary">Browse Toys</a>
                 </div>
             </div>
         </div>
-        
+  
+        <% if (user && user.role === 'admin') { %>
         <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Add New Toy</h5>
-                    <p class="card-text">Add a new toy to the store inventory.</p>
-                    <a href="/toys/new" class="btn btn-success">Add Toy</a>
+                    <h5 class="card-title">Admin Dashboard</h5>
+                    <p class="card-text">Access admin panel to manage users and toys.</p>
+                    <a href="/admin" class="btn btn-success">Admin Panel</a>
                 </div>
             </div>
         </div>
+        <% } else { %>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Your Account</h5>
+                    <p class="card-text">Manage your account settings and preferences.</p>
+                    <button class="btn btn-info" disabled>Coming Soon</button>
+                </div>
+            </div>
+        </div>
+        <% } %>
     </div>
 </div>
 

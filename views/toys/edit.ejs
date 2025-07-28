@@ -1,9 +1,12 @@
 <%- include('../partials/header') %>
 
 <div class="container mt-4">
-    <h2>Edit Toy</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Edit Toy</h2>
+        <a href="/admin" class="btn btn-secondary">← Back to Admin</a>
+    </div>
     
-    <form action="/toys/<%= toy.ProductID %>" method="POST">
+    <form action="/toys/<%= toy.ProductID %>" method="POST" enctype="multipart/form-data" class="mx-auto" style="max-width: 500px;">
         <div class="form-group">
             <label>Name</label>
             <input type="text" name="name" class="form-control" value="<%= toy.ProductName %>" required>
@@ -27,12 +30,27 @@
         </div>
         
         <div class="form-group">
+            <label>Current Image</label>
+            <% if (toy.Image && toy.Image.trim() !== '') { %>
+                <div class="mb-2">
+                    <img src="/uploads/<%= toy.Image %>" alt="<%= toy.ProductName %>" style="max-width: 200px; height: auto;" class="img-thumbnail">
+                </div>
+            <% } else { %>
+                <p class="text-muted">No image currently uploaded</p>
+            <% } %>
+            
+            <label>Upload New Image (Optional)</label>
+            <input type="file" class="form-control" name="image" accept="image/*">
+            <small class="text-muted">Leave blank to keep current image. Max size: 5MB.</small>
+        </div>
+        
+        <div class="form-group">
             <label>Description</label>
             <textarea name="description" class="form-control" rows="3" required><%= toy.Description %></textarea>
         </div>
         
         <button type="submit" class="btn btn-primary">Update Toy</button>
-        <a href="/toys" class="btn btn-secondary">Cancel</a>
+        <a href="/admin" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 

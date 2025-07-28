@@ -3,9 +3,41 @@ const session = require('express-session');
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
 const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
 const app = express();
 
 const PORT = 3000;
+
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/')
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'toy-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 
+    },
+    fileFilter: function (req, file, cb) {
+
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed!'), false);
+        }
+    }
+});
 
 const db = mysql.createConnection({
     host: 'rdksq2.h.filess.io',
@@ -39,6 +71,15 @@ function isAdmin(req, res, next) {
     res.status(403).send('Access denied');
 }
 
+function canEditToy(req, res, next) {
+    const userRole = req.session.user.role;
+    
+    if (userRole === 'admin') {
+        return next();
+    }
+    
+    return res.status(403).send('Access denied - Only admins can edit toys');
+}
 
 app.get('/', (req, res) => {
     res.redirect('/login');
@@ -115,11 +156,11 @@ app.get('/admin', isLoggedIn, isAdmin, (req, res) => {
     });
 });
 
-app.get('/toys/new', isLoggedIn, (req, res) => {
+app.get('/toys/new', isLoggedIn, isAdmin, (req, res) => {
     res.render('toys/new', { user: req.session.user });
 });
 
-app.post('/toys', isLoggedIn, (req, res) => {
+app.post('/toys', isLoggedIn, isAdmin, upload.single('image'), (req, res) => {
     const { name, category, price, description } = req.body;
 
     if (!name || !category || !price || !description) {
@@ -134,16 +175,18 @@ app.post('/toys', isLoggedIn, (req, res) => {
     if (!validCategories.includes(category)) {
         return res.status(400).send(`Invalid category. Please select from: ${validCategories.join(', ')}`);
     }
-   
+
+    const imagePath = req.file ? req.file.filename : '';
+
     db.query(
-        'INSERT INTO toys (ProductName, Quantity, Price, Description) VALUES (?, ?, ?, ?)',
-        [name, 1, parseFloat(price), description],
+        'INSERT INTO toys (ProductName, Quantity, Price, Description, Image) VALUES (?, ?, ?, ?, ?)',
+        [name, 1, parseFloat(price), description, imagePath],
         (err) => {
             if (err) {
                 console.error(err);
                 return res.status(500).send('Database error');
             }
-            res.redirect('/toys');
+            res.redirect('/admin');
         }
     );
 });
@@ -161,9 +204,8 @@ app.get('/toys/:id/edit', isLoggedIn, canEditToy, (req, res) => {
     });
 });
 
-app.post('/toys', isLoggedIn, (req, res) => {
+app.post('/toys/:id', isLoggedIn, canEditToy, upload.single('image'), (req, res) => {
     const { name, category, price, description } = req.body;
-
     if (!name || !category || !price || !description) {
         return res.status(400).send('All fields are required');
     }
@@ -174,41 +216,53 @@ app.post('/toys', isLoggedIn, (req, res) => {
     
     const validCategories = ['Action Figures', 'Building Sets', 'Dolls', 'Educational', 'Outdoor'];
     if (!validCategories.includes(category)) {
-        return res.status(400).send(`Invalid category. Please select from: ${validCategories.join(', ')}`);
+        return res.status(400).send('Invalid category');
     }
 
-    db.query(
-        'INSERT INTO toys (ProductName, Quantity, Price, Description, Image) VALUES (?, ?, ?, ?, ?)',
-        [name, 1, parseFloat(price), description, 'default-toy.jpg'],
-        (err) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).send('Database error');
-            }
-            res.redirect('/toys');
-        }
-    );
-});
-
-function canEditToy(req, res, next) {
-    const userRole = req.session.user.role;
+    let updateQuery = 'UPDATE toys SET ProductName = ?, Price = ?, Description = ?';
+    let queryParams = [name, parseFloat(price), description];
     
-    if (userRole === 'admin') {
-        return next();
+    if (req.file) {
+        updateQuery += ', Image = ?';
+        queryParams.push(req.file.filename);
     }
     
-    return res.status(403).send('Access denied - Only admins can edit toys');
-}
+    updateQuery += ' WHERE ProductID = ?';
+    queryParams.push(req.params.id);
 
-app.post('/toys/:id/delete', isLoggedIn, isAdmin, (req, res) => {
-    const toyId = req.params.id;
-    
-    db.query('DELETE FROM toys WHERE ProductID = ?', [toyId], (err) => {
+    db.query(updateQuery, queryParams, (err) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Database error');
         }
-        res.redirect('/toys');
+        res.redirect('/admin');
+    });
+});
+
+app.post('/toys/:id/delete', isLoggedIn, isAdmin, (req, res) => {
+    const toyId = req.params.id;
+
+    db.query('SELECT Image FROM toys WHERE ProductID = ?', [toyId], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+
+        db.query('DELETE FROM toys WHERE ProductID = ?', [toyId], (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Database error');
+            }
+
+            if (results.length > 0 && results[0].Image) {
+                const imagePath = path.join(__dirname, 'public', 'uploads', results[0].Image);
+                fs.unlink(imagePath, (err) => {
+                    if (err) console.log('Could not delete image file:', err);
+                });
+            }
+            
+            res.redirect('/admin');
+        });
     });
 });
 
