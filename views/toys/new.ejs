@@ -3,6 +3,11 @@
 <div class="container mt-4">
   <h2 class="text-center mb-4">Add New Toy</h2>
   <form action="/toys" method="POST" class="mx-auto" style="max-width: 500px;">
+
+    <div class="mb-3">
+      <label for="name" class="form-label">Toy ID</label>
+      <input type="number" class="form-control" id="id" name="id" required>
+    </div>
     
     <div class="mb-3">
       <label for="name" class="form-label">Toy Name</label>
