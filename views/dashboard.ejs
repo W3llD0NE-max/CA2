@@ -1,42 +1,228 @@
 <%- include('./partials/header') %>
 
-<div class="container mt-4">
-    <h2>Welcome to Toy Store Dashboard</h2>
-    <p>Hello, <%= user.role === 'admin' ? 'Admin' : 'User' %>!</p>
-    
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Browse Toys</h5>
-                    <p class="card-text">View and search all available toys in our store.</p>
-                    <a href="/toys" class="btn btn-primary">Browse Toys</a>
+<!-- Hero Section -->
+<div class="bg-gradient-to-r from-purple-600 to-pink-500 text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 fw-bold mb-3">
+                    🧸 Welcome to Toy Store!
+                </h1>
+                <p class="lead mb-4">
+                    Hello, <span class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                        <%= user.role === 'admin' ? '👑 Admin' : '🎮 User' %>
+                    </span>
+                </p>
+                <p class="fs-5 mb-0">Discover amazing toys and create magical moments!</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="toy-icons fs-1">
+                    🚗 🎲 🎪 🎯
                 </div>
             </div>
         </div>
-  
+    </div>
+</div>
+
+<!-- Quick Stats Section -->
+<div class="container mt-5">
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body py-4">
+                    <div class="display-1 mb-3">🎨</div>
+                    <h5 class="card-title">Creative Play</h5>
+                    <p class="card-text text-muted">Unleash imagination with our creative toys</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body py-4">
+                    <div class="display-1 mb-3">🏆</div>
+                    <h5 class="card-title">Quality Assured</h5>
+                    <p class="card-text text-muted">Premium toys for endless fun and learning</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 text-center">
+                <div class="card-body py-4">
+                    <div class="display-1 mb-3">⚡</div>
+                    <h5 class="card-title">Fast & Easy</h5>
+                    <p class="card-text text-muted">Simple browsing and quick access to toys</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Action Cards -->
+    <div class="row g-4 mt-2">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg h-100 hover-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-primary text-white me-3">
+                            🔍
+                        </div>
+                        <h5 class="card-title mb-0 fs-4">Browse Toys</h5>
+                    </div>
+                    <p class="card-text text-muted mb-4">
+                        Explore our amazing collection of toys! Search by category, find your favorites, and discover new adventures waiting for you.
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="/toys" class="btn btn-primary btn-lg px-4">
+                            <i class="fas fa-rocket me-2"></i>Start Exploring
+                        </a>
+                        <small class="text-muted">✨ New arrivals weekly</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <% if (user && user.role === 'admin') { %>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Admin Dashboard</h5>
-                    <p class="card-text">Access admin panel to manage users and toys.</p>
-                    <a href="/admin" class="btn btn-success">Admin Panel</a>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg h-100 hover-card admin-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-success text-white me-3">
+                            ⚙️
+                        </div>
+                        <h5 class="card-title mb-0 fs-4">Admin Dashboard</h5>
+                    </div>
+                    <p class="card-text text-muted mb-4">
+                        Access your admin control panel to manage users, toys, and store settings. Keep everything running smoothly!
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="/admin" class="btn btn-success btn-lg px-4">
+                            <i class="fas fa-cog me-2"></i>Admin Panel
+                        </a>
+                        <small class="text-success">👑 Admin Access</small>
+                    </div>
                 </div>
             </div>
         </div>
         <% } else { %>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Your Account</h5>
-                    <p class="card-text">Manage your account settings and preferences.</p>
-                    <button class="btn btn-info" disabled>Coming Soon</button>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg h-100 hover-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-info text-white me-3">
+                            ➕
+                        </div>
+                        <h5 class="card-title mb-0 fs-4">Add New Toy</h5>
+                    </div>
+                    <p class="card-text text-muted mb-4">
+                        Got a toy to share? Add it to our collection and let others discover amazing toys through your recommendations!
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="/toys/new" class="btn btn-info btn-lg px-4">
+                            <i class="fas fa-plus me-2"></i>Add Toy
+                        </a>
+                        <small class="text-info">🎁 Share the joy</small>
+                    </div>
                 </div>
             </div>
         </div>
         <% } %>
     </div>
+
+    <!-- Quick Actions Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body py-4">
+                    <h5 class="text-center mb-4">🚀 Quick Actions</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-6">
+                            <a href="/toys/search" class="btn btn-outline-primary w-100 py-3">
+                                <div>🔍</div>
+                                <small>Search Toys</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/toys/new" class="btn btn-outline-success w-100 py-3">
+                                <div>➕</div>
+                                <small>Add Toy</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <button class="btn btn-outline-warning w-100 py-3" disabled>
+                                <div>⭐</div>
+                                <small>Favorites</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/logout" class="btn btn-outline-danger w-100 py-3">
+                                <div>👋</div>
+                                <small>Logout</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Custom Styles -->
+<style>
+    .hover-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,0.175) !important;
+    }
+    
+    .icon-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    
+    .admin-card {
+        background: linear-gradient(135deg, #f8f9ff 0%, #e8f5e8 100%);
+    }
+    
+    .toy-icons {
+        animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-10px);
+        }
+        60% {
+            transform: translateY(-5px);
+        }
+    }
+    
+    .bg-gradient-to-r {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .btn-lg {
+        border-radius: 25px;
+        font-weight: 600;
+    }
+    
+    .card {
+        border-radius: 15px;
+    }
+    
+    .display-1 {
+        font-size: 3rem;
+    }
+</style>
 
 <%- include('./partials/footer') %>
