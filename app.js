@@ -38,7 +38,31 @@ function isAdmin(req, res, next) {
     if (req.session.user && req.session.user.role === 'admin') return next();
     res.status(403).send('Access denied');
 }
-
+function canEditToy(req, res, next) {
+    const toyId = req.params.id;
+    const userId = req.session.user.id;
+    const userRole = req.session.user.role;
+    
+    if (userRole === 'admin') {
+        return next();
+    }
+db.query('SELECT user_id FROM toys WHERE id = ?', [toyId], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        
+        if (results.length === 0) {
+            return res.status(404).send('Toy not found');
+        }
+        
+        if (results[0].user_id === userId) {
+            return next();
+        }
+        
+        return res.status(403).send('Access denied - You can only edit your own toys');
+    });
+}
 app.get('/', (req, res) => {
     res.redirect('/login');
 });
@@ -114,10 +138,10 @@ app.get('/toys/new', isLoggedIn, isAdmin, (req, res) => {
 
 
 app.post('/toys', isLoggedIn, isAdmin, (req, res) => {
-    const { name, category, price, description } = req.body;
+    const {name, category, price, description } = req.body;
     db.query(
-        'INSERT INTO toys (name, category, price, description, user_id) VALUES (?, ?, ?, ?, ?)',
-        [name, category, price, description, req.session.user.id],
+        'INSERT INTO toys (name, category, price, description ) VALUES (?, ?, ?, ?, ?)',
+        [name, category, price, description],
         (err) => {
             if (err) throw err;
             res.redirect('/toys');
@@ -126,22 +150,67 @@ app.post('/toys', isLoggedIn, isAdmin, (req, res) => {
 });
 
 
-app.get('/toys/:id/edit', isLoggedIn, (req, res) => {
+app.get('/toys/:id/edit', isLoggedIn, canEditToy, (req, res) => {
     db.query('SELECT * FROM toys WHERE id = ?', [req.params.id], (err, results) => {
-        if (err) throw err;
-        if (results.length === 0) return res.status(404).send('Toy not found');
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        if (results.length === 0) {
+            return res.status(404).send('Toy not found');
+        }
         res.render('toys/edit', { toy: results[0], user: req.session.user });
     });
 });
 
-
-app.post('/toys/:id', isLoggedIn, (req, res) => {
+app.post('/toys/:id', isLoggedIn, canEditToy, (req, res) => {
     const { name, category, price, description } = req.body;
+    
+    if (!name || !category || !price || !description) {
+        return res.status(400).send('All fields are required');
+    }
+    
+    if (isNaN(price) || price < 0) {
+        return res.status(400).send('Price must be a valid positive number');
+    }
+    
     db.query(
         'UPDATE toys SET name = ?, category = ?, price = ?, description = ? WHERE id = ?',
-        [name, category, price, description, req.params.id],
+        [name, category, parseFloat(price), description, req.params.id],
         (err) => {
-            if (err) throw err;
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Database error');
+            }
+            res.redirect('/toys');
+        }
+    );
+});
+
+app.post('/toys', isLoggedIn, (req, res) => {
+    const { name, category, price, description } = req.body;
+    
+    if (!name || !category || !price || !description) {
+        return res.status(400).send('All fields are required');
+    }
+    
+    if (isNaN(price) || price < 0) {
+        return res.status(400).send('Price must be a valid positive number');
+    }
+    
+    const validCategories = ['Action Figures', 'Building Sets', 'Dolls', 'Educational', 'Outdoor'];
+    if (!validCategories.includes(category)) {
+        return res.status(400).send('Invalid category');
+    }
+    
+    db.query(
+        'INSERT INTO toys (name, category, price, description, user_id) VALUES (?, ?, ?, ?, ?)',
+        [name, category, parseFloat(price), description, req.session.user.id],
+        (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Database error');
+            }
             res.redirect('/toys');
         }
     );
