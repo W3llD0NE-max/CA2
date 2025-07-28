@@ -38,6 +38,7 @@ function isAdmin(req, res, next) {
     if (req.session.user && req.session.user.role === 'admin') return next();
     res.status(403).send('Access denied');
 }
+
 function canEditToy(req, res, next) {
     const toyId = req.params.id;
     const userId = req.session.user.id;
@@ -46,7 +47,8 @@ function canEditToy(req, res, next) {
     if (userRole === 'admin') {
         return next();
     }
-db.query('SELECT user_id FROM toys WHERE id = ?', [toyId], (err, results) => {
+    
+    db.query('SELECT user_id FROM toys WHERE id = ?', [toyId], (err, results) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Database error');
@@ -63,6 +65,7 @@ db.query('SELECT user_id FROM toys WHERE id = ?', [toyId], (err, results) => {
         return res.status(403).send('Access denied - You can only edit your own toys');
     });
 }
+
 app.get('/', (req, res) => {
     res.redirect('/login');
 });
@@ -83,6 +86,7 @@ app.post('/login', (req, res) => {
         }
     });
 });
+
 app.get('/dashboard', isLoggedIn, (req, res) => {
     if (req.session.user.role === 'admin') {
         res.redirect('/admin');
@@ -90,7 +94,6 @@ app.get('/dashboard', isLoggedIn, (req, res) => {
         res.render('dashboard', { user: req.session.user });
     }
 });
-
 
 app.get('/register', (req, res) => {
     res.render('register');
@@ -108,7 +111,7 @@ app.post('/register', async (req, res) => {
 app.get('/toys', isLoggedIn, (req, res) => {
     db.query('SELECT * FROM toys', (err, toys) => {
         if (err) throw err;
-        res.render('toys/index', { toys });
+        res.render('toys/index', { toys, user: req.session.user });
     });
 });
 
@@ -131,65 +134,13 @@ app.get('/admin', isLoggedIn, isAdmin, (req, res) => {
     });
 });
 
-
-app.get('/toys/new', isLoggedIn, isAdmin, (req, res) => {
+app.get('/toys/new', isLoggedIn, (req, res) => {
     res.render('toys/new', { user: req.session.user });
-});
-
-
-app.post('/toys', isLoggedIn, isAdmin, (req, res) => {
-    const {name, category, price, description } = req.body;
-    db.query(
-        'INSERT INTO toys (name, category, price, description ) VALUES (?, ?, ?, ?, ?)',
-        [name, category, price, description],
-        (err) => {
-            if (err) throw err;
-            res.redirect('/toys');
-        }
-    );
-});
-
-
-app.get('/toys/:id/edit', isLoggedIn, canEditToy, (req, res) => {
-    db.query('SELECT * FROM toys WHERE id = ?', [req.params.id], (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send('Database error');
-        }
-        if (results.length === 0) {
-            return res.status(404).send('Toy not found');
-        }
-        res.render('toys/edit', { toy: results[0], user: req.session.user });
-    });
-});
-
-app.post('/toys/:id', isLoggedIn, canEditToy, (req, res) => {
-    const { name, category, price, description } = req.body;
-    
-    if (!name || !category || !price || !description) {
-        return res.status(400).send('All fields are required');
-    }
-    
-    if (isNaN(price) || price < 0) {
-        return res.status(400).send('Price must be a valid positive number');
-    }
-    
-    db.query(
-        'UPDATE toys SET name = ?, category = ?, price = ?, description = ? WHERE id = ?',
-        [name, category, parseFloat(price), description, req.params.id],
-        (err) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).send('Database error');
-            }
-            res.redirect('/toys');
-        }
-    );
 });
 
 app.post('/toys', isLoggedIn, (req, res) => {
     const { name, category, price, description } = req.body;
-    
+
     if (!name || !category || !price || !description) {
         return res.status(400).send('All fields are required');
     }
@@ -216,18 +167,71 @@ app.post('/toys', isLoggedIn, (req, res) => {
     );
 });
 
+app.get('/toys/:id/edit', isLoggedIn, canEditToy, (req, res) => {
+    db.query('SELECT * FROM toys WHERE id = ?', [req.params.id], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        if (results.length === 0) {
+            return res.status(404).send('Toy not found');
+        }
+        res.render('toys/edit', { toy: results[0], user: req.session.user });
+    });
+});
+
+app.post('/toys/:id', isLoggedIn, canEditToy, (req, res) => {
+    const { name, category, price, description } = req.body;
+    if (!name || !category || !price || !description) {
+        return res.status(400).send('All fields are required');
+    }
+    
+    if (isNaN(price) || price < 0) {
+        return res.status(400).send('Price must be a valid positive number');
+    }
+    
+    const validCategories = ['Action Figures', 'Building Sets', 'Dolls', 'Educational', 'Outdoor'];
+    if (!validCategories.includes(category)) {
+        return res.status(400).send('Invalid category');
+    }
+    
+    db.query(
+        'UPDATE toys SET name = ?, category = ?, price = ?, description = ? WHERE id = ?',
+        [name, category, parseFloat(price), description, req.params.id],
+        (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Database error');
+            }
+            res.redirect('/toys');
+        }
+    );
+});
 
 app.post('/toys/:id/delete', isLoggedIn, (req, res) => {
-    if (req.session.user.role === 'admin') {
-        db.query('DELETE FROM toys WHERE id = ?', [req.params.id], (err) => {
-            if (err) throw err;
+    const toyId = req.params.id;
+    const userId = req.session.user.id;
+    const userRole = req.session.user.role;
+    
+    if (userRole === 'admin') {
+        db.query('DELETE FROM toys WHERE id = ?', [toyId], (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Database error');
+            }
             res.redirect('/toys');
         });
     } else {
         db.query('DELETE FROM toys WHERE id = ? AND user_id = ?', 
-            [req.params.id, req.session.user.id], 
-            (err) => {
-                if (err) throw err;
+            [toyId, userId], 
+            (err, result) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).send('Database error');
+                }
+                if (result.affectedRows === 0) {
+                    return res.status(403).send('Access denied - You can only delete your own toys');
+                }
                 res.redirect('/toys');
             }
         );
@@ -239,18 +243,22 @@ app.get('/toys/search', isLoggedIn, (req, res) => {
     let query = 'SELECT * FROM toys WHERE 1=1';
     const params = [];
     
-    if (q) {
+    if (q && q.trim()) {
         query += ' AND (name LIKE ? OR description LIKE ?)';
-        params.push(`%${q}%`, `%${q}%`);
+        const searchTerm = `%${q.trim()}%`;
+        params.push(searchTerm, searchTerm);
     }
     
-    if (category) {
+    if (category && category.trim()) {
         query += ' AND category = ?';
-        params.push(category);
+        params.push(category.trim());
     }
     
     db.query(query, params, (err, toys) => {
-        if (err) throw err;
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
         res.render('toys/index', { toys, user: req.session.user });
     });
 });
