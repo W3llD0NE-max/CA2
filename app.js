@@ -39,21 +39,6 @@ function isAdmin(req, res, next) {
     res.status(403).send('Access denied');
 }
 
-function canEditToy(req, res, next) {
-    const toyId = req.params.id;
-    const userId = req.session.user.id;
-    const userRole = req.session.user.role;
-    
-    if (userRole === 'admin') {
-        return next();
-    }
-
-    if (userRole === 'admin') {
-        return next();
-    }
-    
-    return res.status(403).send('Access denied - Only admins can edit toys');
-}
 
 app.get('/', (req, res) => {
     res.redirect('/login');
@@ -176,8 +161,9 @@ app.get('/toys/:id/edit', isLoggedIn, canEditToy, (req, res) => {
     });
 });
 
-app.post('/toys/:id', isLoggedIn, canEditToy, (req, res) => {
+app.post('/toys', isLoggedIn, (req, res) => {
     const { name, category, price, description } = req.body;
+
     if (!name || !category || !price || !description) {
         return res.status(400).send('All fields are required');
     }
@@ -188,12 +174,12 @@ app.post('/toys/:id', isLoggedIn, canEditToy, (req, res) => {
     
     const validCategories = ['Action Figures', 'Building Sets', 'Dolls', 'Educational', 'Outdoor'];
     if (!validCategories.includes(category)) {
-        return res.status(400).send('Invalid category');
+        return res.status(400).send(`Invalid category. Please select from: ${validCategories.join(', ')}`);
     }
 
     db.query(
-        'UPDATE toys SET ProductName = ?, Price = ?, Description = ? WHERE ProductID = ?',
-        [name, parseFloat(price), description, req.params.id],
+        'INSERT INTO toys (ProductName, Quantity, Price, Description, Image) VALUES (?, ?, ?, ?, ?)',
+        [name, 1, parseFloat(price), description, 'default-toy.jpg'],
         (err) => {
             if (err) {
                 console.error(err);
@@ -203,6 +189,16 @@ app.post('/toys/:id', isLoggedIn, canEditToy, (req, res) => {
         }
     );
 });
+
+function canEditToy(req, res, next) {
+    const userRole = req.session.user.role;
+    
+    if (userRole === 'admin') {
+        return next();
+    }
+    
+    return res.status(403).send('Access denied - Only admins can edit toys');
+}
 
 app.post('/toys/:id/delete', isLoggedIn, isAdmin, (req, res) => {
     const toyId = req.params.id;

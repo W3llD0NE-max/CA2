@@ -29,15 +29,6 @@
                             $<%= parseFloat(toy.Price).toFixed(2) %> | Qty: <%= toy.Quantity %>
                         </h6>
                         <p class="card-text"><%= toy.Description %></p>
-                        
-                        <% if (user && user.role === 'admin') { %>
-                            <div class="d-flex justify-content-between">
-                                <a href="/toys/<%= toy.ProductID %>/edit" class="btn btn-sm btn-warning">Edit</a>
-                                <form action="/toys/<%= toy.ProductID %>/delete" method="POST">
-                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                </form>
-                            </div>
-                        <% } %>
                     </div>
                 </div>
             </div>
