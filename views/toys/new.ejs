@@ -3,11 +3,6 @@
 <div class="container mt-4">
   <h2 class="text-center mb-4">Add New Toy</h2>
   <form action="/toys" method="POST" class="mx-auto" style="max-width: 500px;">
-
-    <div class="mb-3">
-      <label for="name" class="form-label">Toy ID</label>
-      <input type="number" class="form-control" id="id" name="id" required>
-    </div>
     
     <div class="mb-3">
       <label for="name" class="form-label">Toy Name</label>
@@ -16,7 +11,14 @@
 
     <div class="mb-3">
       <label for="category" class="form-label">Category</label>
-      <input type="text" class="form-control" id="category" name="category" required>
+      <select class="form-control" id="category" name="category" required>
+        <option value="">Select a category</option>
+        <option value="Action Figures">Action Figures</option>
+        <option value="Building Sets">Building Sets</option>
+        <option value="Dolls">Dolls</option>
+        <option value="Educational">Educational</option>
+        <option value="Outdoor">Outdoor</option>
+      </select>
     </div>
 
     <div class="mb-3">
@@ -34,6 +36,65 @@
     </div>
 
   </form>
+</div>
+
+<%- include('../partials/footer') %>
+
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Our Toys</h2>
+        <% if (user) { %>
+            <a href="/toys/new" class="btn btn-success">Add New Toy</a>
+        <% } %>
+    </div>
+ 
+    <form action="/toys/search" method="GET" class="mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text" name="q" class="form-control" placeholder="Search by name or description">
+            </div>
+            <div class="col-md-4">
+                <select name="category" class="form-control">
+                    <option value="">All Categories</option>
+                    <option value="Action Figures">Action Figures</option>
+                    <option value="Building Sets">Building Sets</option>
+                    <option value="Dolls">Dolls</option>
+                    <option value="Educational">Educational</option>
+                    <option value="Outdoor">Outdoor</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </div>
+    </form>
+    
+    <div class="row">
+        <% toys.forEach(toy => { %>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><%= toy.name %></h5>
+                        <h6 class="card-subtitle mb-2 text-muted">
+                            <%= toy.category %> - $<%= toy.price.toFixed(2) %>
+                        </h6>
+                        <p class="card-text"><%= toy.description %></p>
+                        
+                        <% if (user && (user.role === 'admin' || user.id === toy.user_id)) { %>
+                            <div class="d-flex justify-content-between">
+                                <a href="/toys/<%= toy.id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+                                <form action="/toys/<%= toy.id %>/delete" method="POST">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    </div>
 </div>
 
 <%- include('../partials/footer') %>

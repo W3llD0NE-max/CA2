@@ -102,8 +102,14 @@ app.get('/register', (req, res) => {
 app.post('/register', async (req, res) => {
     const { username, email, password, role } = req.body;
     const hashed = await bcrypt.hash(password, 10);
-    db.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', [username, email, hashed, role], (err) => {
-        if (err) throw err;
+    const normalizedRole = role === 'customer' ? 'user' : role;
+    
+    db.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', 
+        [username, email, hashed, normalizedRole], (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Registration failed');
+        }
         res.redirect('/login');
     });
 });
@@ -151,7 +157,7 @@ app.post('/toys', isLoggedIn, (req, res) => {
     
     const validCategories = ['Action Figures', 'Building Sets', 'Dolls', 'Educational', 'Outdoor'];
     if (!validCategories.includes(category)) {
-        return res.status(400).send('Invalid category');
+        return res.status(400).send(`Invalid category. Please select from: ${validCategories.join(', ')}`);
     }
     
     db.query(
