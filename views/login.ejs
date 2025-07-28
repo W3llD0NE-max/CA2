@@ -1,21 +1,86 @@
 <%- include('./partials/header') %>
 
 <div class="container mt-5">
-    <h2>Login</h2>
-    <form action="/login" method="POST">
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" name="email" class="form-control" required />
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <h2 class="card-title text-primary mb-2">Welcome Back</h2>
+                        <p class="text-muted">Please sign in to your account</p>
+                    </div>
+                    
+                    <form action="/login" method="POST">
+                        <div class="form-group mb-3">
+                            <label class="form-label text-dark fw-semibold">Email Address</label>
+                            <input type="email" name="email" class="form-control form-control-lg" 
+                                   placeholder="Enter your email" required />
+                        </div>
+                        
+                        <div class="form-group mb-4">
+                            <label class="form-label text-dark fw-semibold">Password</label>
+                            <input type="password" name="password" class="form-control form-control-lg" 
+                                   placeholder="Enter your password" required />
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                            Sign In
+                        </button>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p class="text-muted mb-0">
+                            Don't have an account? 
+                            <a href="/register" class="text-primary text-decoration-none fw-semibold">
+                                Create one here
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Password</label>
-            <input type="password" name="password" class="form-control" required />
-        </div>
-        <p class="mt-3">
-    Don't have an account? <a href="/register">Register here</a>
-</p>
-        <button type="submit" class="btn btn-primary mt-3">Login</button>
-    </form>
+    </div>
 </div>
+
+<style>
+    .card {
+        border-radius: 15px;
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .form-control {
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        transform: scale(1.02);
+    }
+    
+    .btn-primary {
+        border-radius: 10px;
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #0056b3, #004085);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+</style>
 
 <%- include('./partials/footer') %>
