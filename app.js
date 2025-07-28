@@ -59,6 +59,14 @@ app.post('/login', (req, res) => {
         }
     });
 });
+app.get('/dashboard', isLoggedIn, (req, res) => {
+    if (req.session.user.role === 'admin') {
+        res.redirect('/admin');
+    } else {
+        res.render('dashboard', { user: req.session.user });
+    }
+});
+
 
 app.get('/register', (req, res) => {
     res.render('register');
@@ -72,11 +80,6 @@ app.post('/register', async (req, res) => {
         res.redirect('/login');
     });
 });
-
-app.get('/dashboard', isLoggedIn, (req, res) => {
-    res.redirect('admin/dashboard');
-});
-
 
 app.get('/toys', isLoggedIn, (req, res) => {
     db.query('SELECT * FROM toys', (err, toys) => {
