@@ -1,0 +1,30 @@
+<%- include('./partials/header') %>
+
+<div class="container mt-4">
+    <h2>Welcome to Toy Store Dashboard</h2>
+    <p>Hello, <%= user.role === 'admin' ? 'Admin' : 'User' %>!</p>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Browse Toys</h5>
+                    <p class="card-text">View all available toys in our store.</p>
+                    <a href="/toys" class="btn btn-primary">View Toys</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Add New Toy</h5>
+                    <p class="card-text">Add a new toy to the store inventory.</p>
+                    <a href="/toys/new" class="btn btn-success">Add Toy</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('./partials/footer') %>
