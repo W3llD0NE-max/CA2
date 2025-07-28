@@ -47,23 +47,12 @@ function canEditToy(req, res, next) {
     if (userRole === 'admin') {
         return next();
     }
+
+    if (userRole === 'admin') {
+        return next();
+    }
     
-    db.query('SELECT user_id FROM toys WHERE id = ?', [toyId], (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send('Database error');
-        }
-        
-        if (results.length === 0) {
-            return res.status(404).send('Toy not found');
-        }
-        
-        if (results[0].user_id === userId) {
-            return next();
-        }
-        
-        return res.status(403).send('Access denied - You can only edit your own toys');
-    });
+    return res.status(403).send('Access denied - Only admins can edit toys');
 }
 
 app.get('/', (req, res) => {
@@ -88,6 +77,7 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/dashboard', isLoggedIn, (req, res) => {
+    console.log('User role:', req.session.user.role);
     if (req.session.user.role === 'admin') {
         res.redirect('/admin');
     } else {
@@ -159,10 +149,10 @@ app.post('/toys', isLoggedIn, (req, res) => {
     if (!validCategories.includes(category)) {
         return res.status(400).send(`Invalid category. Please select from: ${validCategories.join(', ')}`);
     }
-    
+   
     db.query(
-        'INSERT INTO toys (name, category, price, description, user_id) VALUES (?, ?, ?, ?, ?)',
-        [name, category, parseFloat(price), description, req.session.user.id],
+        'INSERT INTO toys (ProductName, Quantity, Price, Description) VALUES (?, ?, ?, ?)',
+        [name, 1, parseFloat(price), description],
         (err) => {
             if (err) {
                 console.error(err);
@@ -174,7 +164,7 @@ app.post('/toys', isLoggedIn, (req, res) => {
 });
 
 app.get('/toys/:id/edit', isLoggedIn, canEditToy, (req, res) => {
-    db.query('SELECT * FROM toys WHERE id = ?', [req.params.id], (err, results) => {
+    db.query('SELECT * FROM toys WHERE ProductID = ?', [req.params.id], (err, results) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Database error');
@@ -200,10 +190,10 @@ app.post('/toys/:id', isLoggedIn, canEditToy, (req, res) => {
     if (!validCategories.includes(category)) {
         return res.status(400).send('Invalid category');
     }
-    
+
     db.query(
-        'UPDATE toys SET name = ?, category = ?, price = ?, description = ? WHERE id = ?',
-        [name, category, parseFloat(price), description, req.params.id],
+        'UPDATE toys SET ProductName = ?, Price = ?, Description = ? WHERE ProductID = ?',
+        [name, parseFloat(price), description, req.params.id],
         (err) => {
             if (err) {
                 console.error(err);
@@ -214,34 +204,16 @@ app.post('/toys/:id', isLoggedIn, canEditToy, (req, res) => {
     );
 });
 
-app.post('/toys/:id/delete', isLoggedIn, (req, res) => {
+app.post('/toys/:id/delete', isLoggedIn, isAdmin, (req, res) => {
     const toyId = req.params.id;
-    const userId = req.session.user.id;
-    const userRole = req.session.user.role;
     
-    if (userRole === 'admin') {
-        db.query('DELETE FROM toys WHERE id = ?', [toyId], (err) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).send('Database error');
-            }
-            res.redirect('/toys');
-        });
-    } else {
-        db.query('DELETE FROM toys WHERE id = ? AND user_id = ?', 
-            [toyId, userId], 
-            (err, result) => {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).send('Database error');
-                }
-                if (result.affectedRows === 0) {
-                    return res.status(403).send('Access denied - You can only delete your own toys');
-                }
-                res.redirect('/toys');
-            }
-        );
-    }
+    db.query('DELETE FROM toys WHERE ProductID = ?', [toyId], (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        res.redirect('/toys');
+    });
 });
 
 app.get('/toys/search', isLoggedIn, (req, res) => {
@@ -250,16 +222,11 @@ app.get('/toys/search', isLoggedIn, (req, res) => {
     const params = [];
     
     if (q && q.trim()) {
-        query += ' AND (name LIKE ? OR description LIKE ?)';
+        query += ' AND (ProductName LIKE ? OR Description LIKE ?)';
         const searchTerm = `%${q.trim()}%`;
         params.push(searchTerm, searchTerm);
     }
-    
-    if (category && category.trim()) {
-        query += ' AND category = ?';
-        params.push(category.trim());
-    }
-    
+
     db.query(query, params, (err, toys) => {
         if (err) {
             console.error(err);

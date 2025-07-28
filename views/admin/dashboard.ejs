@@ -32,16 +32,16 @@
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Category</th>
                         <th>Price</th>
+                        <th>Quantity</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% toys.forEach(toy => { %>
                         <tr>
-                            <td><%= toy.name %></td>
-                            <td><%= toy.category %></td>
-                            <td>$<%= toy.price.toFixed(2) %></td>
+                            <td><%= toy.ProductName %></td>
+                            <td>$<%= parseFloat(toy.Price).toFixed(2) %></td>
+                            <td><%= toy.Quantity %></td>
                         </tr>
                     <% }) %>
                 </tbody>
