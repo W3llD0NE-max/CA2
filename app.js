@@ -1,3 +1,5 @@
+app,js
+
 const express = require('express');
 const session = require('express-session');
 const mysql = require('mysql2');
@@ -97,7 +99,7 @@ app.post('/login', (req, res) => {
             req.session.user = { id: results[0].id, role: results[0].role };
             res.redirect('/dashboard');
         } else {
-            res.send('Login failed');
+            res.render('login-fail'); 
         }
     });
 });
@@ -205,28 +207,29 @@ app.get('/toys/:id/edit', isLoggedIn, canEditToy, (req, res) => {
 });
 
 app.post('/toys/:id', isLoggedIn, canEditToy, upload.single('image'), (req, res) => {
-    const { name, category, price, description } = req.body;
-    if (!name || !category || !price || !description) {
+    const { name, category, price, description, quantity } = req.body;
+
+    if (!name || !category || !price || !description || quantity === undefined) {
         return res.status(400).send('All fields are required');
     }
-    
-    if (isNaN(price) || price < 0) {
-        return res.status(400).send('Price must be a valid positive number');
+
+    if (isNaN(price) || price < 0 || isNaN(quantity) || quantity < 0) {
+        return res.status(400).send('Price and Quantity must be valid positive numbers');
     }
-    
+
     const validCategories = ['Action Figures', 'Building Sets', 'Dolls', 'Educational', 'Outdoor'];
     if (!validCategories.includes(category)) {
         return res.status(400).send('Invalid category');
     }
 
-    let updateQuery = 'UPDATE toys SET ProductName = ?, Price = ?, Description = ?';
-    let queryParams = [name, parseFloat(price), description];
-    
+    let updateQuery = 'UPDATE toys SET ProductName = ?, Price = ?, Description = ?, Quantity = ?';
+    let queryParams = [name, parseFloat(price), description, parseInt(quantity)];
+
     if (req.file) {
         updateQuery += ', Image = ?';
         queryParams.push(req.file.filename);
     }
-    
+
     updateQuery += ' WHERE ProductID = ?';
     queryParams.push(req.params.id);
 
@@ -238,6 +241,7 @@ app.post('/toys/:id', isLoggedIn, canEditToy, upload.single('image'), (req, res)
         res.redirect('/admin');
     });
 });
+
 
 app.post('/toys/:id/delete', isLoggedIn, isAdmin, (req, res) => {
     const toyId = req.params.id;
@@ -253,7 +257,6 @@ app.post('/toys/:id/delete', isLoggedIn, isAdmin, (req, res) => {
                 console.error(err);
                 return res.status(500).send('Database error');
             }
-
             if (results.length > 0 && results[0].Image) {
                 const imagePath = path.join(__dirname, 'public', 'uploads', results[0].Image);
                 fs.unlink(imagePath, (err) => {

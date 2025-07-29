@@ -30,6 +30,11 @@
         </div>
         
         <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" name="quantity" class="form-control" value="<%= toy.Quantity %>" min="0" required>
+        </div>
+        
+        <div class="form-group">
             <label>Current Image</label>
             <% if (toy.Image && toy.Image.trim() !== '') { %>
                 <div class="mb-2">
