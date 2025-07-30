@@ -264,13 +264,16 @@ app.post('/favorites/remove/:id', isLoggedIn, (req, res) => {
     res.json({ success: true, message: 'Removed from favorites' });
 });
 
-app.get('/users/:id/edit', isLoggedIn, isAdmin, (req, res) => {
-    const userId = req.params.id;
-    if (parseInt(userId) === req.session.user.id) {
+
+app.get('/users/:username/edit', isLoggedIn, isAdmin, (req, res) => {
+    const username = req.params.username;
+    
+    
+    if (username === req.session.user.username) {
         return res.status(403).send('You cannot edit your own account');
     }
     
-    db.query('SELECT * FROM users WHERE id = ?', [userId], (err, results) => {
+    db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Database error');
@@ -282,14 +285,16 @@ app.get('/users/:id/edit', isLoggedIn, isAdmin, (req, res) => {
     });
 });
 
-app.post('/users/:id', isLoggedIn, isAdmin, async (req, res) => {
-    const userId = req.params.id;
-    const { username, email, role, password } = req.body;
-    if (parseInt(userId) === req.session.user.id) {
+app.post('/users/:username', isLoggedIn, isAdmin, async (req, res) => {
+    const username = req.params.username;
+    const { username: newUsername, email, role, password } = req.body;
+    
+    // Prevent editing own account
+    if (username === req.session.user.username) {
         return res.status(403).send('You cannot edit your own account');
     }
     
-    if (!username || !email || !role) {
+    if (!newUsername || !email || !role) {
         return res.status(400).send('Username, email, and role are required');
     }
     
@@ -300,15 +305,16 @@ app.post('/users/:id', isLoggedIn, isAdmin, async (req, res) => {
     
     try {
         let updateQuery = 'UPDATE users SET username = ?, email = ?, role = ?';
-        let queryParams = [username, email, role];
+        let queryParams = [newUsername, email, role];
+        
         if (password && password.trim() !== '') {
             const hashedPassword = await bcrypt.hash(password, 10);
             updateQuery += ', password = ?';
             queryParams.push(hashedPassword);
         }
         
-        updateQuery += ' WHERE id = ?';
-        queryParams.push(userId);
+        updateQuery += ' WHERE username = ?';
+        queryParams.push(username);
         
         db.query(updateQuery, queryParams, (err) => {
             if (err) {
@@ -323,13 +329,15 @@ app.post('/users/:id', isLoggedIn, isAdmin, async (req, res) => {
     }
 });
 
-app.post('/users/:id/delete', isLoggedIn, isAdmin, (req, res) => {
-    const userId = req.params.id;
-    if (parseInt(userId) === req.session.user.id) {
+app.post('/users/:username/delete', isLoggedIn, isAdmin, (req, res) => {
+    const username = req.params.username;
+    
+    // Prevent deleting own account
+    if (username === req.session.user.username) {
         return res.status(403).send('You cannot delete your own account');
     }
     
-    db.query('DELETE FROM users WHERE id = ?', [userId], (err) => {
+    db.query('DELETE FROM users WHERE username = ?', [username], (err) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Database error');
