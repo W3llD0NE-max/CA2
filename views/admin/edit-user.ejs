@@ -15,10 +15,10 @@
                             <%= editUser.username.charAt(0).toUpperCase() %>
                         </div>
                         <h4 class="text-primary">Editing: <%= editUser.username %></h4>
-                        <small class="text-muted">User ID: #<%= editUser.id %></small>
+                        <small class="text-muted">Username: @<%= editUser.username %></small>
                     </div>
                     
-                    <form action="/users/<%= editUser.id %>" method="POST">
+                    <form action="/users/<%= editUser.username %>" method="POST">
                         <div class="form-group mb-3">
                             <label class="form-label text-dark fw-semibold">
                                 <i class="fas fa-user me-2"></i>Username
@@ -115,7 +115,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-2"></i>Cancel
                 </button>
-                <form action="/users/<%= editUser.id %>/delete" method="POST" style="display: inline;">
+                <form action="/users/<%= editUser.username %>/delete" method="POST" style="display: inline;">
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash me-2"></i>Yes, Delete User
                     </button>
