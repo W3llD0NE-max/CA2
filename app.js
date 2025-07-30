@@ -1,4 +1,3 @@
-///
 const express = require('express');
 const session = require('express-session');
 const mysql = require('mysql2');
@@ -31,7 +30,6 @@ const upload = multer({
         fileSize: 5 * 1024 * 1024 
     },
     fileFilter: function (req, file, cb) {
-
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
         } else {
@@ -138,6 +136,43 @@ app.get('/toys', isLoggedIn, (req, res) => {
     });
 });
 
+app.get('/toys/search', isLoggedIn, (req, res) => {
+    const { q, category } = req.query;
+    let query = 'SELECT * FROM toys WHERE 1=1';
+    const params = [];
+    
+    if (q && q.trim()) {
+        query += ' AND (ProductName LIKE ? OR Description LIKE ?)';
+        const searchTerm = `%${q.trim()}%`;
+        params.push(searchTerm, searchTerm);
+    }
+
+    db.query(query, params, (err, toys) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        res.render('toys/index', { toys, user: req.session.user });
+    });
+});
+
+app.get('/toys/new', isLoggedIn, isAdmin, (req, res) => {
+    res.render('toys/new', { user: req.session.user });
+});
+
+app.get('/toys/:id', isLoggedIn, (req, res) => {
+    db.query('SELECT * FROM toys WHERE ProductID = ?', [req.params.id], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        if (results.length === 0) {
+            return res.status(404).send('Toy not found');
+        }
+        res.render('toys/show', { toy: results[0], user: req.session.user });
+    });
+});
+
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/login');
@@ -240,7 +275,6 @@ app.post('/toys/:id', isLoggedIn, canEditToy, upload.single('image'), (req, res)
         res.redirect('/admin');
     });
 });
-
 
 app.post('/toys/:id/delete', isLoggedIn, isAdmin, (req, res) => {
     const toyId = req.params.id;

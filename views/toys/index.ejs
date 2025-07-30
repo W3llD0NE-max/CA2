@@ -20,7 +20,7 @@
     <div class="row">
         <% toys.forEach(toy => { %>
             <div class="col-md-4 mb-4">
-                <div class="card h-100">
+                <div class="card h-100 toy-card" onclick="window.location.href='/toys/<%= toy.ProductID %>'">
                     <% if (toy.Image && toy.Image.trim() !== '') { %>
                         <img src="/uploads/<%= toy.Image %>" class="card-img-top" alt="<%= toy.ProductName %>" style="height: 200px; object-fit: cover;">
                     <% } else { %>
@@ -33,7 +33,12 @@
                         <h6 class="card-subtitle mb-2 text-muted">
                             $<%= parseFloat(toy.Price).toFixed(2) %> | Qty: <%= toy.Quantity %>
                         </h6>
-                        <p class="card-text flex-grow-1"><%= toy.Description %></p>
+                        <p class="card-text flex-grow-1"><%= toy.Description.length > 100 ? toy.Description.substring(0, 100) + '...' : toy.Description %></p>
+                        <div class="mt-auto">
+                            <small class="text-primary">
+                                <i class="fas fa-eye me-1"></i>Click to view details
+                            </small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -48,5 +53,28 @@
         </div>
     <% } %>
 </div>
+
+<style>
+    .toy-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .toy-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border-color: #007bff;
+    }
+    
+    .toy-card:hover .card-title {
+        color: #007bff;
+    }
+    
+    .card-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
 
 <%- include('../partials/footer') %>
