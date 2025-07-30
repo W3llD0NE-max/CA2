@@ -9,7 +9,7 @@
                 </h1>
                 <p class="lead mb-4">
                     Hello, <span class="badge bg-light text-dark px-3 py-2 rounded-pill">
-                        <%= user.role === 'admin' ? '👑 Admin' : '🎮 User' %>
+                        <%= user.role === 'admin' ? '👑 Admin' : '🎮 User' %> - <%= user.username %>
                     </span>
                 </p>
                 <p class="fs-5 mb-0">Discover amazing toys and create magical moments!</p>
@@ -76,33 +76,57 @@
                 </div>
             </div>
         </div>
+        
         <div class="col-lg-6">
-<div class="card border-0 shadow-lg h-100 hover-card">
-<div class="card-body p-4">
-<div class="d-flex align-items-center mb-3">
-<div class="icon-circle bg-warning text-white me-3">
+            <div class="card border-0 shadow-lg h-100 hover-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-warning text-white me-3">
                             🛒
-</div>
-<h5 class="card-title mb-0 fs-4">View Your Cart</h5>
-</div>
-<p class="card-text text-muted mb-4">
+                        </div>
+                        <h5 class="card-title mb-0 fs-4">View Your Cart</h5>
+                    </div>
+                    <p class="card-text text-muted mb-4">
                         Review the items you've added to your shopping cart. Ready to checkout or add more?
-</p>
-<div class="d-flex justify-content-between align-items-center">
-<a href="/cart" class="btn btn-warning btn-lg px-4 text-white">
-<i class="fas fa-shopping-cart me-2"></i>Go to Cart
-</a>
-<small class="text-warning">
-<% if (typeof cartItemCount !== 'undefined' && cartItemCount > 0) { %>
-<%= cartItemCount %> items
-<% } else { %>
-                                Your cart is empty
-<% } %>
-</small>
-</div>
-</div>
-</div>
-</div>
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="/cart" class="btn btn-warning btn-lg px-4 text-white">
+                            <i class="fas fa-shopping-cart me-2"></i>Go to Cart
+                        </a>
+                        <small class="text-warning">
+                            <% if (typeof cartItemCount !== 'undefined' && cartItemCount > 0) { %>
+                                <i class="fas fa-shopping-bag me-1"></i><%= cartItemCount %> items
+                            <% } else { %>
+                                <i class="fas fa-cart-plus me-1"></i>Cart is empty
+                            <% } %>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg h-100 hover-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-danger text-white me-3">
+                            💖
+                        </div>
+                        <h5 class="card-title mb-0 fs-4">My Favorites</h5>
+                    </div>
+                    <p class="card-text text-muted mb-4">
+                        View and manage your favorite toys. Keep track of the toys you love most and easily add them to your cart later.
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="/favorites" class="btn btn-danger btn-lg px-4">
+                            <i class="fas fa-heart me-2"></i>View Favorites
+                        </a>
+                        <small class="text-danger">❤️ Save for later</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <% if (user && user.role === 'admin') { %>
         <div class="col-lg-6">
             <div class="card border-0 shadow-lg h-100 hover-card admin-card">
@@ -131,18 +155,18 @@
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
                         <div class="icon-circle bg-info text-white me-3">
-                            ➕
+                            🔍
                         </div>
-                        <h5 class="card-title mb-0 fs-4">Add New Toy</h5>
+                        <h5 class="card-title mb-0 fs-4">Search & Discover</h5>
                     </div>
                     <p class="card-text text-muted mb-4">
-                        Got a toy to share? Add it to our collection and let others discover amazing toys through your recommendations!
+                        Looking for something specific? Use our search feature to find the perfect toy by name, description, or category.
                     </p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <a href="/toys/new" class="btn btn-info btn-lg px-4">
-                            <i class="fas fa-plus me-2"></i>Add Toy
+                        <a href="/toys/search" class="btn btn-info btn-lg px-4">
+                            <i class="fas fa-search me-2"></i>Search Toys
                         </a>
-                        <small class="text-info">🎁 Share the joy</small>
+                        <small class="text-info">🎁 Find the perfect toy</small>
                     </div>
                 </div>
             </div>
@@ -163,16 +187,21 @@
                             </a>
                         </div>
                         <div class="col-md-3 col-6">
-                            <a href="/toys/new" class="btn btn-outline-success w-100 py-3">
-                                <div>➕</div>
-                                <small>Add Toy</small>
+                            <a href="/favorites" class="btn btn-outline-danger w-100 py-3">
+                                <div>💖</div>
+                                <small>My Favorites</small>
                             </a>
                         </div>
                         <div class="col-md-3 col-6">
-                            <button class="btn btn-outline-warning w-100 py-3" disabled>
-                                <div>⭐</div>
-                                <small>Favorites</small>
-                            </button>
+                            <a href="/cart" class="btn btn-outline-warning w-100 py-3 position-relative">
+                                <div>🛒</div>
+                                <small>My Cart</small>
+                                <% if (typeof cartItemCount !== 'undefined' && cartItemCount > 0) { %>
+                                    <span class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-warning text-dark">
+                                        <%= cartItemCount %>
+                                    </span>
+                                <% } %>
+                            </a>
                         </div>
                         <div class="col-md-3 col-6">
                             <a href="/logout" class="btn btn-outline-danger w-100 py-3">

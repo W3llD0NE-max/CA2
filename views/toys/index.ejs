@@ -2,53 +2,140 @@
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Our Toys</h2>
-        <a href="/dashboard" class="btn btn-outline-primary">← Back to Dashboard</a>
+        <div>
+            <h2 class="mb-2">🧸 Our Toys Collection</h2>
+            <p class="text-muted mb-0">Discover amazing toys for every age and interest</p>
+        </div>
+        <div class="btn-group">
+            <a href="/dashboard" class="btn btn-outline-primary">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+            <a href="/favorites" class="btn btn-outline-danger">
+                <i class="fas fa-heart me-1"></i>Favorites
+            </a>
+        </div>
     </div>
  
-    <form action="/toys/search" method="GET" class="mb-4">
-        <div class="row">
-            <div class="col-md-8">
-                <input type="text" name="q" class="form-control" placeholder="Search by name or description">
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary w-100">Search</button>
-            </div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form action="/toys/search" method="GET">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-8">
+                        <label for="search" class="form-label fw-semibold">
+                            <i class="fas fa-search me-1"></i>Search Toys
+                        </label>
+                        <input type="text" 
+                               id="search"
+                               name="q" 
+                               class="form-control form-control-lg" 
+                               placeholder="Search by name or description..."
+                               value="<%= typeof query !== 'undefined' ? query : '' %>">
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>Search Toys
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
-    </form>
-    
+    </div>
+  
+    <% if (toys.length > 0) { %>
+        <div class="alert alert-info d-flex align-items-center mb-4">
+            <i class="fas fa-info-circle me-2"></i>
+            Showing <strong><%= toys.length %></strong> toy<%= toys.length !== 1 ? 's' : '' %>
+        </div>
+    <% } %>
+
     <div class="row">
         <% toys.forEach(toy => { %>
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 toy-card" onclick="window.location.href='/toys/<%= toy.ProductID %>'">
-                    <% if (toy.Image && toy.Image.trim() !== '') { %>
-                        <img src="/uploads/<%= toy.Image %>" class="card-img-top" alt="<%= toy.ProductName %>" style="height: 200px; object-fit: cover;">
-                    <% } else { %>
-                        <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
-                            <span class="text-muted">No Image Available</span>
-                        </div>
-                    <% } %>
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 toy-card shadow-sm" onclick="window.location.href='/toys/<%= toy.ProductID %>'">
+                    <div class="position-relative">
+                        <% if (toy.Image && toy.Image.trim() !== '') { %>
+                            <img src="/uploads/<%= toy.Image %>" 
+                                 class="card-img-top" 
+                                 alt="<%= toy.ProductName %>" 
+                                 style="height: 200px; object-fit: cover;">
+                        <% } else { %>
+                            <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-image fa-2x mb-2"></i>
+                                    <small>No Image</small>
+                                </div>
+                            </div>
+                        <% } %>
+                        
+                        <button class="btn btn-sm position-absolute top-0 end-0 m-2 favorite-btn" 
+                                onclick="event.stopPropagation(); toggleFavorite('<%= toy.ProductID %>', this.querySelector('i'))" 
+                                data-bs-toggle="tooltip" 
+                                title="Add to favorites">
+                            <i class="fas fa-heart text-muted"></i>
+                        </button>
+                        
+                        <% if (toy.Quantity === 0) { %>
+                            <span class="position-absolute top-0 start-0 m-2 badge bg-danger">
+                                Out of Stock
+                            </span>
+                        <% } else if (toy.Quantity <= 5) { %>
+                            <span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark">
+                                Low Stock
+                            </span>
+                        <% } %>
+                    </div>
+                    
                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title"><%= toy.ProductName %></h5>
-                        <h6 class="card-subtitle mb-2 text-muted">
-                            $<%= parseFloat(toy.Price).toFixed(2) %> | Qty: <%= toy.Quantity %>
-                        </h6>
-                        <p class="card-text flex-grow-1"><%= toy.Description.length > 100 ? toy.Description.substring(0, 100) + '...' : toy.Description %></p>
+                        <h5 class="card-title mb-2"><%= toy.ProductName %></h5>
+                        
+                        <div class="mb-2">
+                            <span class="badge bg-success fs-6 me-1">
+                                $<%= parseFloat(toy.Price).toFixed(2) %>
+                            </span>
+                            <span class="badge bg-info fs-6">
+                                Qty: <%= toy.Quantity %>
+                            </span>
+                        </div>
+                        
+                        <p class="card-text flex-grow-1 text-muted small">
+                            <%= toy.Description.length > 80 ? toy.Description.substring(0, 80) + '...' : toy.Description %>
+                        </p>
                         
                         <div class="mt-auto">
                             <% if (toy.Quantity > 0) { %>
-                                <form action="/add-to-cart/<%= toy.ProductID %>" method="POST" class="d-flex align-items-center" onclick="event.stopPropagation();">
-                                    <input type="number" name="quantity" value="1" min="1" max="<%= toy.Quantity %>" class="form-control me-2" style="width: 80px;">
-                                    <button type="submit" class="btn btn-success">
-                                        Add to Cart
-                                    </button>
+                                <form action="/add-to-cart/<%= toy.ProductID %>" method="POST" class="mb-2" onclick="event.stopPropagation();">
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" 
+                                               name="quantity" 
+                                               value="1" 
+                                               min="1" 
+                                               max="<%= toy.Quantity %>" 
+                                               class="form-control" 
+                                               style="max-width: 60px;">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                        </button>
+                                    </div>
                                 </form>
                             <% } else { %>
-                                <p class="text-danger mb-0">Out of Stock</p>
+                                <button class="btn btn-secondary btn-sm w-100 mb-2" disabled>
+                                    <i class="fas fa-times-circle me-1"></i>Out of Stock
+                                </button>
                             <% } %>
-                            <small class="text-primary mt-2 d-block">
-                                <i class="fas fa-eye me-1"></i>Click card to view details
-                            </small>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-primary">
+                                    <i class="fas fa-eye me-1"></i>Click to view
+                                </small>
+                                <button class="btn btn-outline-danger btn-sm" 
+                                        onclick="event.stopPropagation(); toggleFavorite('<%= toy.ProductID %>', this.querySelector('i'))"
+                                        data-bs-toggle="tooltip" 
+                                        title="Add to favorites">
+                                    <i class="fas fa-heart text-muted"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -57,12 +144,74 @@
     </div>
     
     <% if (toys.length === 0) { %>
-        <div class="text-center mt-5">
-            <h4>No toys found</h4>
-            <p class="text-muted">Try adjusting your search criteria or browse all toys.</p>
-            <a href="/toys" class="btn btn-primary">View All Toys</a>
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-search fa-4x text-muted"></i>
+                        </div>
+                        <h4 class="text-muted mb-3">No Toys Found</h4>
+                        <p class="text-muted mb-4">
+                            We couldn't find any toys matching your search criteria.
+                            <br>Try adjusting your search terms or browse all toys.
+                        </p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <a href="/toys" class="btn btn-primary">
+                                <i class="fas fa-toys me-2"></i>View All Toys
+                            </a>
+                            <button class="btn btn-outline-secondary" onclick="document.getElementById('search').value=''; document.querySelector('form').submit();">
+                                <i class="fas fa-eraser me-2"></i>Clear Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     <% } %>
+ 
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <h5 class="text-center mb-4">
+                        <i class="fas fa-rocket me-2"></i>Quick Actions
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-6">
+                            <a href="/favorites" class="btn btn-outline-danger w-100 py-3">
+                                <div><i class="fas fa-heart fa-2x"></i></div>
+                                <small>My Favorites</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/cart" class="btn btn-outline-success w-100 py-3">
+                                <div><i class="fas fa-shopping-cart fa-2x"></i></div>
+                                <small>My Cart</small>
+                                <% if (typeof cartItemCount !== 'undefined' && cartItemCount > 0) { %>
+                                    <span class="badge bg-success position-absolute top-0 end-0 translate-middle">
+                                        <%= cartItemCount %>
+                                    </span>
+                                <% } %>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <button class="btn btn-outline-info w-100 py-3" onclick="window.scrollTo(0, 0)">
+                                <div><i class="fas fa-arrow-up fa-2x"></i></div>
+                                <small>Back to Top</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/dashboard" class="btn btn-outline-primary w-100 py-3">
+                                <div><i class="fas fa-home fa-2x"></i></div>
+                                <small>Dashboard</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -82,9 +231,57 @@
         color: #007bff;
     }
     
+    .favorite-btn {
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+    
+    .favorite-btn:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
+    }
+    
     .card-text {
         overflow: hidden;
         text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+    
+    .input-group .form-control {
+        border-radius: 0.375rem 0 0 0.375rem;
+    }
+    
+    .input-group .btn {
+        border-radius: 0 0.375rem 0.375rem 0;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .card {
+        border-radius: 15px;
+    }
+    
+    .quick-action-btn {
+        position: relative;
+    }
+    
+    .search-form .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
     }
 </style>
 

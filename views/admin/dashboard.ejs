@@ -17,7 +17,6 @@
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>ID</th>
                                     <th>Username</th>
                                     <th>Email</th>
                                     <th>Role</th>
@@ -27,7 +26,6 @@
                             <tbody>
                                 <% users.forEach(userItem => { %>
                                     <tr>
-                                        <td><%= userItem.id %></td>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="user-avatar bg-secondary text-white rounded-circle me-2" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
@@ -52,10 +50,12 @@
                                             <% if (userItem.id !== user.id) { %>
                                                 <div class="d-flex gap-1">
                                                     <a href="/users/<%= userItem.id %>/edit" class="btn btn-primary btn-sm" title="Edit User">
-                                                        <i class="fas fa-edit me-1"></i>Edit
+                                                        <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <button class="btn btn-danger btn-sm" onclick="confirmUserDelete('<%= userItem.id %>', '<%= userItem.username %>')" title="Delete User">
-                                                        <i class="fas fa-trash me-1"></i>Delete
+                                                    <button class="btn btn-danger btn-sm" 
+                                                            onclick="confirmUserDelete('<%= userItem.id %>', '<%= userItem.username %>')" 
+                                                            title="Delete User">
+                                                        <i class="fas fa-trash"></i>
                                                     </button>
                                                 </div>
                                             <% } else { %>
@@ -125,13 +125,15 @@
                                         <td>
                                             <div class="d-flex gap-1">
                                                 <a href="/toys/<%= toy.ProductID %>" class="btn btn-info btn-sm" title="View Toy">
-                                                    <i class="fas fa-eye me-1"></i>View
+                                                    <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="/toys/<%= toy.ProductID %>/edit" class="btn btn-warning btn-sm" title="Edit Toy">
-                                                    <i class="fas fa-edit me-1"></i>Edit
+                                                    <i class="fas fa-edit"></i>
                                                 </a>
-                                                <button class="btn btn-danger btn-sm" onclick="confirmToyDelete('<%= toy.ProductID %>', '<%= toy.ProductName %>')" title="Delete Toy">
-                                                    <i class="fas fa-trash me-1"></i>Delete
+                                                <button class="btn btn-danger btn-sm" 
+                                                        onclick="confirmToyDelete('<%= toy.ProductID %>', '<%= toy.ProductName %>')" 
+                                                        title="Delete Toy">
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -184,11 +186,12 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="userDeleteModal" tabindex="-1" aria-hidden="true">
+
+<div class="modal fade" id="userDeleteModal" tabindex="-1" aria-labelledby="userDeleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title text-danger">
+                <h5 class="modal-title text-danger" id="userDeleteModalLabel">
                     <i class="fas fa-exclamation-triangle me-2"></i>Confirm User Deletion
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -215,11 +218,12 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="toyDeleteModal" tabindex="-1" aria-hidden="true">
+
+<div class="modal fade" id="toyDeleteModal" tabindex="-1" aria-labelledby="toyDeleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title text-danger">
+                <h5 class="modal-title text-danger" id="toyDeleteModalLabel">
                     <i class="fas fa-exclamation-triangle me-2"></i>Confirm Toy Deletion
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -289,18 +293,26 @@
     }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+
     function confirmUserDelete(userId, username) {
         document.getElementById('deleteUserName').textContent = username;
         document.getElementById('deleteUserForm').action = '/users/' + userId + '/delete';
-        new bootstrap.Modal(document.getElementById('userDeleteModal')).show();
+        var modal = new bootstrap.Modal(document.getElementById('userDeleteModal'));
+        modal.show();
     }
     
     function confirmToyDelete(toyId, toyName) {
         document.getElementById('deleteToyName').textContent = toyName;
         document.getElementById('deleteToyForm').action = '/toys/' + toyId + '/delete';
-        new bootstrap.Modal(document.getElementById('toyDeleteModal')).show();
+        var modal = new bootstrap.Modal(document.getElementById('toyDeleteModal'));
+        modal.show();
     }
 </script>
 

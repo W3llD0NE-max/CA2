@@ -25,7 +25,7 @@
     <div class="row">
         <div class="col-lg-6 mb-4">
             <div class="card border-0 shadow-sm">
-                <div class="card-body p-0">
+                <div class="card-body p-0 position-relative">
                     <% if (toy.Image && toy.Image.trim() !== '') { %>
                         <img src="/uploads/<%= toy.Image %>" 
                              alt="<%= toy.ProductName %>" 
@@ -42,6 +42,13 @@
                             </div>
                         </div>
                     <% } %>
+                  
+                    <button class="btn btn-lg position-absolute top-0 end-0 m-3 favorite-btn" 
+                            onclick="toggleFavorite('<%= toy.ProductID %>', this.querySelector('i'))" 
+                            data-bs-toggle="tooltip" 
+                            title="Add to favorites">
+                        <i class="fas fa-heart text-muted"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -93,18 +100,31 @@
 
                     <div class="d-grid gap-2 mb-3">
                         <% if (toy.Quantity > 0) { %>
-                            <button class="btn btn-success btn-lg" onclick="showAddToCartModal()">
-                                <i class="fas fa-shopping-cart me-2"></i>Add to Cart
-                            </button>
+                            <form action="/add-to-cart/<%= toy.ProductID %>" method="POST" class="d-flex gap-2">
+                                <input type="number" name="quantity" value="1" min="1" max="<%= toy.Quantity %>" 
+                                       class="form-control" style="max-width: 100px;" placeholder="Qty">
+                                <button type="submit" class="btn btn-success btn-lg flex-grow-1">
+                                    <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                </button>
+                            </form>
                         <% } else { %>
                             <button class="btn btn-secondary btn-lg" disabled>
                                 <i class="fas fa-times-circle me-2"></i>Out of Stock
                             </button>
                         <% } %>
                         
-                        <button class="btn btn-outline-danger" onclick="addToWishlist()">
-                            <i class="fas fa-heart me-2"></i>Add to Wishlist
-                        </button>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button class="btn btn-outline-danger w-100" onclick="toggleFavorite('<%= toy.ProductID %>', this.querySelector('i'))">
+                                    <i class="fas fa-heart text-muted me-2"></i>Add to Favorites
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-outline-info w-100" onclick="shareProduct()">
+                                    <i class="fas fa-share me-2"></i>Share
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <% if (user && user.role === 'admin') { %>
@@ -135,25 +155,6 @@
             </div>
             <div class="modal-body p-0">
                 <img src="" alt="<%= toy.ProductName %>" class="img-fluid w-100" id="modalImage">
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add to Cart</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <i class="fas fa-shopping-cart fa-3x text-success mb-3"></i>
-                <h5><%= toy.ProductName %></h5>
-                <p class="text-muted">This feature will be available soon!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -190,6 +191,24 @@
     
     .toy-image:hover {
         transform: scale(1.02);
+    }
+    
+    .favorite-btn {
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+    
+    .favorite-btn:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
     }
     
     .breadcrumb {
@@ -235,14 +254,21 @@
         new bootstrap.Modal(document.getElementById('imageModal')).show();
     }
     
-    function showAddToCartModal() {
-        new bootstrap.Modal(document.getElementById('cartModal')).show();
-    }
-    
-    function addToWishlist() {
-        alert('Wishlist feature coming soon!');
+    function shareProduct() {
+        if (navigator.share) {
+            navigator.share({
+                title: '<%= toy.ProductName %>',
+                text: '<%= toy.Description %>',
+                url: window.location.href
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showToast('Product link copied to clipboard!');
+            });
+        }
     }
 </script>
+
 <% if (user && user.role === 'admin') { %>
 <script>
     function confirmDelete() {
@@ -250,7 +276,5 @@
     }
 </script>
 <% } %>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <%- include('../partials/footer') %>

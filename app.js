@@ -80,6 +80,11 @@ function canEditToy(req, res, next) {
     return res.status(403).send('Access denied - Only admins can edit toys');
 }
 
+function getCartItemCount(cart) {
+    if (!cart || !Array.isArray(cart)) return 0;
+    return cart.reduce((total, item) => total + (item.quantity || 0), 0);
+}
+
 app.get('/', (req, res) => {
     res.redirect('/login');
 });
@@ -93,7 +98,7 @@ app.post('/login', (req, res) => {
     db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
         if (err) throw err;
         if (results.length > 0 && await bcrypt.compare(password, results[0].password)) {
-            req.session.user = { id: results[0].id, role: results[0].role };
+            req.session.user = { id: results[0].id, username: results[0].username, role: results[0].role };
             res.redirect('/dashboard');
         } else {
             res.render('login-fail'); 
@@ -106,7 +111,11 @@ app.get('/dashboard', isLoggedIn, (req, res) => {
     if (req.session.user.role === 'admin') {
         res.redirect('/admin');
     } else {
-        res.render('dashboard', { user: req.session.user });
+        const cartItemCount = getCartItemCount(req.session.cart);
+        res.render('dashboard', { 
+            user: req.session.user,
+            cartItemCount: cartItemCount
+        });
     }
 });
 
@@ -132,7 +141,12 @@ app.post('/register', async (req, res) => {
 app.get('/toys', isLoggedIn, (req, res) => {
     db.query('SELECT * FROM toys', (err, toys) => {
         if (err) throw err;
-        res.render('toys/index', { toys, user: req.session.user });
+        const cartItemCount = getCartItemCount(req.session.cart);
+        res.render('toys/index', { 
+            toys, 
+            user: req.session.user,
+            cartItemCount: cartItemCount
+        });
     });
 });
 
@@ -152,7 +166,12 @@ app.get('/toys/search', isLoggedIn, (req, res) => {
             console.error(err);
             return res.status(500).send('Database error');
         }
-        res.render('toys/index', { toys, user: req.session.user });
+        const cartItemCount = getCartItemCount(req.session.cart);
+        res.render('toys/index', { 
+            toys, 
+            user: req.session.user,
+            cartItemCount: cartItemCount
+        });
     });
 });
 
@@ -169,7 +188,12 @@ app.get('/toys/:id', isLoggedIn, (req, res) => {
         if (results.length === 0) {
             return res.status(404).send('Toy not found');
         }
-        res.render('toys/show', { toy: results[0], user: req.session.user });
+        const cartItemCount = getCartItemCount(req.session.cart);
+        res.render('toys/show', { 
+            toy: results[0], 
+            user: req.session.user,
+            cartItemCount: cartItemCount
+        });
     });
 });
 
@@ -190,6 +214,53 @@ app.get('/admin', isLoggedIn, isAdmin, (req, res) => {
             });
         });
     });
+});
+
+app.get('/favorites', isLoggedIn, (req, res) => {
+    const favorites = req.session.favorites || [];
+    if (favorites.length === 0) {
+        return res.render('favorites', { 
+            toys: [], 
+            user: req.session.user,
+            cartItemCount: getCartItemCount(req.session.cart)
+        });
+    }
+    
+    const placeholders = favorites.map(() => '?').join(',');
+    db.query(`SELECT * FROM toys WHERE ProductID IN (${placeholders})`, favorites, (err, toys) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        const cartItemCount = getCartItemCount(req.session.cart);
+        res.render('favorites', { 
+            toys, 
+            user: req.session.user,
+            cartItemCount: cartItemCount
+        });
+    });
+});
+
+app.post('/favorites/add/:id', isLoggedIn, (req, res) => {
+    const toyId = parseInt(req.params.id);
+    if (!req.session.favorites) {
+        req.session.favorites = [];
+    }
+    
+    if (!req.session.favorites.includes(toyId)) {
+        req.session.favorites.push(toyId);
+    }
+    
+    res.json({ success: true, message: 'Added to favorites' });
+});
+
+app.post('/favorites/remove/:id', isLoggedIn, (req, res) => {
+    const toyId = parseInt(req.params.id);
+    if (req.session.favorites) {
+        req.session.favorites = req.session.favorites.filter(id => id !== toyId);
+    }
+    
+    res.json({ success: true, message: 'Removed from favorites' });
 });
 
 app.get('/users/:id/edit', isLoggedIn, isAdmin, (req, res) => {
@@ -264,10 +335,6 @@ app.post('/users/:id/delete', isLoggedIn, isAdmin, (req, res) => {
         }
         res.redirect('/admin');
     });
-});
-
-app.get('/toys/new', isLoggedIn, isAdmin, (req, res) => {
-    res.render('toys/new', { user: req.session.user });
 });
 
 app.post('/toys', isLoggedIn, isAdmin, upload.single('image'), (req, res) => {
@@ -376,25 +443,6 @@ app.post('/toys/:id/delete', isLoggedIn, isAdmin, (req, res) => {
     });
 });
 
-app.get('/toys/search', isLoggedIn, (req, res) => {
-    const { q, category } = req.query;
-    let query = 'SELECT * FROM toys WHERE 1=1';
-    const params = [];
-    
-    if (q && q.trim()) {
-        query += ' AND (ProductName LIKE ? OR Description LIKE ?)';
-        const searchTerm = `%${q.trim()}%`;
-        params.push(searchTerm, searchTerm);
-    }
-
-    db.query(query, params, (err, toys) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send('Database error');
-        }
-        res.render('toys/index', { toys, user: req.session.user });
-    });
-});
 app.post('/add-to-cart/:id', isLoggedIn, (req, res) => {
     const productId = parseInt(req.params.id);
     const quantity = parseInt(req.body.quantity) || 1;
@@ -469,7 +517,12 @@ app.post('/update-cart-quantity/:id', isLoggedIn, (req, res) => {
  
 app.get('/cart', isLoggedIn, (req, res) => {
     const cart = req.session.cart || [];
-    res.render('cart', { cart, user: req.session.user });
+    const cartItemCount = getCartItemCount(cart);
+    res.render('cart', { 
+        cart, 
+        user: req.session.user,
+        cartItemCount: cartItemCount
+    });
 });
  
 app.listen(PORT, () => {
