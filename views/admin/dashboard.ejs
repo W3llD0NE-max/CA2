@@ -47,22 +47,22 @@
                                             <% } %>
                                         </td>
                                         <td>
-                                            <% if (userItem.id !== user.id) { %>
-                                                <div class="d-flex gap-1">
-                                                    <a href="/users/<%= user.id %>/edit" class="btn btn-primary btn-sm" title="Edit User">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    <button class="btn btn-danger btn-sm" 
-                                                            onclick="confirmUserDelete('<%= user.id %>', '<%= user.username %>')" 
-                                                            title="Delete User">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                            <% } else { %>
-                                                <span class="badge bg-success">
-                                                    <i class="fas fa-user-shield me-1"></i>You
-                                                </span>
-                                            <% } %>
+                                           <% if (user.username !== userItem.username) { %>
+    <div class="d-flex gap-1">
+        <a href="/users/<%= userItem.username %>/edit" class="btn btn-primary btn-sm" title="Edit User">
+            <i class="fas fa-edit"></i>
+        </a>
+        <button class="btn btn-danger btn-sm" 
+                onclick="confirmUserDelete('<%= userItem.username %>', '<%= userItem.username %>')" 
+                title="Delete User">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+<% } else { %>
+    <span class="badge bg-success">
+        <i class="fas fa-user-shield me-1"></i>You
+    </span>
+<% } %>
                                         </td>
                                     </tr>
                                 <% }) %>
