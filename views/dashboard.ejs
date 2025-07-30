@@ -1,21 +1,36 @@
 <%- include('./partials/header') %>
 
-<div class="bg-gradient-to-r from-purple-600 to-pink-500 text-white py-5">
+<%
+// Helper function for XSS sanitization
+const escapeHtml = (unsafe) => {
+    if (typeof unsafe !== 'string') {
+        return unsafe; // Return as-is if not a string (e.g., numbers, booleans)
+    }
+    const entities = {'<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;'};
+    return unsafe.replace(/[<>&"']/g, (match) => entities[match]);
+};
+%>
+
+<div class="hero-section text-white py-5">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-md-8">
-                <h1 class="display-4 fw-bold mb-3">
+                <h1 class="hero-title fw-bold mb-3">
                     🧸 Welcome to Toy Store!
                 </h1>
                 <p class="lead mb-4">
                     Hello, <span class="badge bg-light text-dark px-3 py-2 rounded-pill">
-                        <%= user.role === 'admin' ? '👑 Admin' : '🎮 User' %> - <%= user.username %>
+                        <% if (user && user.role === 'admin') { %>
+                            👑 Admin - <%- user.username ? escapeHtml(user.username) : 'Unknown' %>
+                        <% } else { %>
+                            🎮 User - <%- user && user.username ? escapeHtml(user.username) : 'Guest' %>
+                        <% } %>
                     </span>
                 </p>
                 <p class="fs-5 mb-0">Discover amazing toys and create magical moments!</p>
             </div>
             <div class="col-md-4 text-center">
-                <div class="toy-icons fs-1">
+                <div class="toy-icons fs-1" aria-hidden="true" role="presentation">
                     🚗 🎲 🎪 🎯
                 </div>
             </div>
@@ -24,42 +39,83 @@
 </div>
 
 <div class="container mt-5">
-    <div class="row g-4 mb-5">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 text-center">
-                <div class="card-body py-4">
-                    <div class="display-1 mb-3">🎨</div>
-                    <h5 class="card-title">Creative Play</h5>
-                    <p class="card-text text-muted">Unleash imagination with our creative toys</p>
+    <% try { %>
+        <% if (recommendedToys && Array.isArray(recommendedToys) && recommendedToys.length > 0) { %>
+            <div class="row mt-5">
+                <div class="col-12">
+                    <h4 class="mb-4 text-center text-primary">🎯 Recommended Toys (Most In Stock)</h4>
+                    <div class="row g-4">
+                        <% recommendedToys.forEach(toy => { %>
+                            <% // Ensure toy and its essential properties exist before rendering %>
+                            <% if (toy && toy.ProductName && toy.ProductID) { %>
+                                <div class="col-md-4">
+                                    <div class="card h-100 shadow-sm border-0">
+                                        <%
+                                            const toyImage = toy.Image && typeof toy.Image === 'string' && toy.Image.match(/^[a-zA-Z0-9._-]+\.(jpg|jpeg|png|gif|webp)$/i) ? escapeHtml(toy.Image) : null;
+                                            const toyProductName = escapeHtml(toy.ProductName);
+                                        %>
+                                        <% if (toyImage) { %>
+                                            <img src="/uploads/<%- toyImage %>"
+                                                class="card-img-top"
+                                                alt="<%- toyProductName %>"
+                                                style="height: 220px; object-fit: cover;"
+                                                onerror="this.src='/images/placeholder.jpg'; this.onerror=null;">
+                                        <% } else { %>
+                                            <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 220px;">
+                                                <span class="text-muted fs-1" aria-hidden="true">🧸</span>
+                                            </div>
+                                        <% } %>
+                                        <div class="card-body">
+                                            <h5 class="card-title"><%- toyProductName %></h5>
+                                            <p class="card-text text-muted">
+                                                <% const maxDescLength = 80; %>
+                                                <% const description = toy.Description ? toy.Description : 'No description available'; %>
+                                                <% const safeDesc = escapeHtml(description); %>
+                                                <%- safeDesc.length > maxDescLength ? safeDesc.substring(0, maxDescLength) + '...' : safeDesc %>
+                                            </p>
+                                            <% const price = typeof toy.Price === 'number' ? toy.Price : (parseFloat(toy.Price) || 0); %>
+                                            <p class="text-success fw-bold mb-1">$<%- price.toFixed(2) %></p>
+                                            <p class="text-secondary mb-2">In Stock: <strong><%- typeof toy.Quantity === 'number' ? toy.Quantity : (parseInt(toy.Quantity) || 0) %></strong></p>
+                                            <a href="/toys/<%- parseInt(toy.ProductID) %>"
+                                                class="btn btn-outline-primary btn-sm w-100"
+                                                aria-label="View details for <%- toyProductName %>">
+                                                View Toy
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% } %>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="alert alert-info text-center" role="alert">
+                        <h5>No recommended toys available at the moment.</h5>
+                        <p class="mb-0">Check back later or browse our full collection!</p>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    <% } catch(error) { %>
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="alert alert-warning text-center" role="alert">
+                    <h5>⚠️ Unable to load recommended toys</h5>
+                    <p class="mb-0">Please try refreshing the page or contact support if the problem persists.</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 text-center">
-                <div class="card-body py-4">
-                    <div class="display-1 mb-3">🏆</div>
-                    <h5 class="card-title">Quality Assured</h5>
-                    <p class="card-text text-muted">Premium toys for endless fun and learning</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 text-center">
-                <div class="card-body py-4">
-                    <div class="display-1 mb-3">⚡</div>
-                    <h5 class="card-title">Fast & Easy</h5>
-                    <p class="card-text text-muted">Simple browsing and quick access to toys</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <% } %>
 
     <div class="row g-4 mt-2">
         <div class="col-lg-6">
             <div class="card border-0 shadow-lg h-100 hover-card">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="icon-circle bg-primary text-white me-3">
+                        <div class="icon-circle bg-primary text-white me-3" aria-hidden="true">
                             🔍
                         </div>
                         <h5 class="card-title mb-0 fs-4">Browse Toys</h5>
@@ -68,20 +124,20 @@
                         Explore our amazing collection of toys! Search by category, find your favorites, and discover new adventures waiting for you.
                     </p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <a href="/toys" class="btn btn-primary btn-lg px-4">
-                            <i class="fas fa-rocket me-2"></i>Start Exploring
+                        <a href="/toys" class="btn btn-primary btn-lg px-4" aria-label="Browse all toys">
+                            <i class="fas fa-rocket me-2" aria-hidden="true"></i>Start Exploring
                         </a>
                         <small class="text-muted">✨ New arrivals weekly</small>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-6">
             <div class="card border-0 shadow-lg h-100 hover-card">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="icon-circle bg-warning text-white me-3">
+                        <div class="icon-circle bg-warning text-white me-3" aria-hidden="true">
                             🛒
                         </div>
                         <h5 class="card-title mb-0 fs-4">View Your Cart</h5>
@@ -90,26 +146,27 @@
                         Review the items you've added to your shopping cart. Ready to checkout or add more?
                     </p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <a href="/cart" class="btn btn-warning btn-lg px-4 text-white">
-                            <i class="fas fa-shopping-cart me-2"></i>Go to Cart
+                        <a href="/cart" class="btn btn-warning btn-lg px-4 text-white" aria-label="View shopping cart">
+                            <i class="fas fa-shopping-cart me-2" aria-hidden="true"></i>Go to Cart
                         </a>
                         <small class="text-warning">
-                            <% if (typeof cartItemCount !== 'undefined' && cartItemCount > 0) { %>
-                                <i class="fas fa-shopping-bag me-1"></i><%= cartItemCount %> items
+                            <% const cartCount = (typeof cartItemCount !== 'undefined' && cartItemCount !== null) ? parseInt(cartItemCount) : 0; %>
+                            <% if (cartCount > 0) { %>
+                                <i class="fas fa-shopping-bag me-1" aria-hidden="true"></i><%- cartCount %> items
                             <% } else { %>
-                                <i class="fas fa-cart-plus me-1"></i>Cart is empty
+                                <i class="fas fa-cart-plus me-1" aria-hidden="true"></i>Cart is empty
                             <% } %>
                         </small>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-6">
             <div class="card border-0 shadow-lg h-100 hover-card">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="icon-circle bg-danger text-white me-3">
+                        <div class="icon-circle bg-danger text-white me-3" aria-hidden="true">
                             💖
                         </div>
                         <h5 class="card-title mb-0 fs-4">My Favorites</h5>
@@ -118,21 +175,20 @@
                         View and manage your favorite toys. Keep track of the toys you love most and easily add them to your cart later.
                     </p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <a href="/favorites" class="btn btn-danger btn-lg px-4">
-                            <i class="fas fa-heart me-2"></i>View Favorites
+                        <a href="/favorites" class="btn btn-danger btn-lg px-4" aria-label="View favorite toys">
+                            <i class="fas fa-heart me-2" aria-hidden="true"></i>View Favorites
                         </a>
                         <small class="text-danger">❤️ Save for later</small>
                     </div>
                 </div>
             </div>
         </div>
-        
         <% if (user && user.role === 'admin') { %>
         <div class="col-lg-6">
             <div class="card border-0 shadow-lg h-100 hover-card admin-card">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="icon-circle bg-success text-white me-3">
+                        <div class="icon-circle bg-success text-white me-3" aria-hidden="true">
                             ⚙️
                         </div>
                         <h5 class="card-title mb-0 fs-4">Admin Dashboard</h5>
@@ -141,8 +197,8 @@
                         Access your admin control panel to manage users, toys, and store settings. Keep everything running smoothly!
                     </p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <a href="/admin" class="btn btn-success btn-lg px-4">
-                            <i class="fas fa-cog me-2"></i>Admin Panel
+                        <a href="/admin" class="btn btn-success btn-lg px-4" aria-label="Access admin panel">
+                            <i class="fas fa-cog me-2" aria-hidden="true"></i>Admin Panel
                         </a>
                         <small class="text-success">👑 Admin Access</small>
                     </div>
@@ -159,31 +215,31 @@
                     <h5 class="text-center mb-4">🚀 Quick Actions</h5>
                     <div class="row g-3">
                         <div class="col-md-3 col-6">
-                            <a href="/toys/search" class="btn btn-outline-primary w-100 py-3">
-                                <div>🔍</div>
+                            <a href="/toys/search" class="btn btn-outline-primary w-100 py-3" aria-label="Search for toys">
+                                <div aria-hidden="true">🔍</div>
                                 <small>Search Toys</small>
                             </a>
                         </div>
                         <div class="col-md-3 col-6">
-                            <a href="/favorites" class="btn btn-outline-danger w-100 py-3">
-                                <div>💖</div>
+                            <a href="/favorites" class="btn btn-outline-danger w-100 py-3" aria-label="View favorite toys">
+                                <div aria-hidden="true">💖</div>
                                 <small>My Favorites</small>
                             </a>
                         </div>
                         <div class="col-md-3 col-6">
-                            <a href="/cart" class="btn btn-outline-warning w-100 py-3 position-relative">
-                                <div>🛒</div>
+                            <a href="/cart" class="btn btn-outline-warning w-100 py-3 position-relative" aria-label="View shopping cart">
+                                <div aria-hidden="true">🛒</div>
                                 <small>My Cart</small>
-                                <% if (typeof cartItemCount !== 'undefined' && cartItemCount > 0) { %>
-                                    <span class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-warning text-dark">
-                                        <%= cartItemCount %>
+                                <% if (cartCount > 0) { %>
+                                    <span class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-warning text-dark" aria-label="<%- cartCount %> items in cart">
+                                        <%- cartCount %>
                                     </span>
                                 <% } %>
                             </a>
                         </div>
                         <div class="col-md-3 col-6">
-                            <a href="/logout" class="btn btn-outline-danger w-100 py-3">
-                                <div>👋</div>
+                            <a href="/logout" class="btn btn-outline-danger w-100 py-3" aria-label="Logout from account">
+                                <div aria-hidden="true">👋</div>
                                 <small>Logout</small>
                             </a>
                         </div>
@@ -193,18 +249,17 @@
         </div>
     </div>
 </div>
-
 <style>
     .hover-card {
         transition: all 0.3s ease;
         cursor: pointer;
     }
-    
+
     .hover-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 1rem 3rem rgba(0,0,0,0.175) !important;
     }
-    
+
     .icon-circle {
         width: 60px;
         height: 60px;
@@ -214,15 +269,15 @@
         justify-content: center;
         font-size: 1.5rem;
     }
-    
+
     .admin-card {
         background: linear-gradient(135deg, #f8f9ff 0%, #e8f5e8 100%);
     }
-    
+
     .toy-icons {
         animation: bounce 2s infinite;
     }
-    
+
     @keyframes bounce {
         0%, 20%, 50%, 80%, 100% {
             transform: translateY(0);
@@ -234,22 +289,34 @@
             transform: translateY(-5px);
         }
     }
-    
-    .bg-gradient-to-r {
+
+    .hero-section {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-    
+
     .btn-lg {
         border-radius: 25px;
         font-weight: 600;
     }
-    
+
     .card {
         border-radius: 15px;
     }
-    
-    .display-1 {
+
+    .hero-title {
         font-size: 3rem;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2rem;
+        }
+
+        .icon-circle {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+        }
     }
 </style>
 
