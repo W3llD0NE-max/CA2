@@ -1,0 +1,186 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Edit User Account</h2>
+        <a href="/admin" class="btn btn-secondary">← Back to Admin Dashboard</a>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="user-avatar bg-primary text-white rounded-circle mx-auto mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                            <%= editUser.username.charAt(0).toUpperCase() %>
+                        </div>
+                        <h4 class="text-primary">Editing: <%= editUser.username %></h4>
+                        <small class="text-muted">User ID: #<%= editUser.id %></small>
+                    </div>
+                    
+                    <form action="/users/<%= editUser.id %>" method="POST">
+                        <div class="form-group mb-3">
+                            <label class="form-label text-dark fw-semibold">
+                                <i class="fas fa-user me-2"></i>Username
+                            </label>
+                            <input type="text" name="username" class="form-control form-control-lg" 
+                                   value="<%= editUser.username %>" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label text-dark fw-semibold">
+                                <i class="fas fa-envelope me-2"></i>Email Address
+                            </label>
+                            <input type="email" name="email" class="form-control form-control-lg" 
+                                   value="<%= editUser.email %>" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label text-dark fw-semibold">
+                                <i class="fas fa-user-tag me-2"></i>Role
+                            </label>
+                            <select name="role" class="form-select form-select-lg" required>
+                                <option value="admin" <%= editUser.role === 'admin' ? 'selected' : '' %>>
+                                    👑 Admin
+                                </option>
+                                <option value="user" <%= editUser.role === 'user' ? 'selected' : '' %>>
+                                    🎮 User
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-4">
+                            <label class="form-label text-dark fw-semibold">
+                                <i class="fas fa-lock me-2"></i>New Password
+                            </label>
+                            <input type="password" name="password" class="form-control form-control-lg" 
+                                   placeholder="Leave blank to keep current password">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Only enter a password if you want to change it
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Update User
+                            </button>
+                            <a href="/admin" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mt-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Once you delete a user account, there is no going back. This will permanently delete the user and all associated data.
+                    </p>
+                    <button class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="fas fa-trash me-2"></i>Delete User Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Account Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-user-times fa-3x text-danger mb-3"></i>
+                    <h5>Delete "<%= editUser.username %>"?</h5>
+                </div>
+                <div class="alert alert-danger">
+                    <strong>Warning:</strong> This action cannot be undone. The user account and all associated data will be permanently deleted.
+                </div>
+                <p class="text-muted">Are you absolutely sure you want to delete this user account?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <form action="/users/<%= editUser.id %>/delete" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Yes, Delete User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 15px;
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        transform: scale(1.02);
+    }
+    
+    .btn-primary {
+        border-radius: 10px;
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #0056b3, #004085);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+    }
+    
+    .btn-danger {
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    }
+    
+    .user-avatar {
+        font-weight: bold;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function confirmDelete() {
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+</script>
+
+<%- include('../partials/footer') %>

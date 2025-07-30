@@ -192,6 +192,80 @@ app.get('/admin', isLoggedIn, isAdmin, (req, res) => {
     });
 });
 
+app.get('/users/:id/edit', isLoggedIn, isAdmin, (req, res) => {
+    const userId = req.params.id;
+    if (parseInt(userId) === req.session.user.id) {
+        return res.status(403).send('You cannot edit your own account');
+    }
+    
+    db.query('SELECT * FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        if (results.length === 0) {
+            return res.status(404).send('User not found');
+        }
+        res.render('admin/edit-user', { editUser: results[0], user: req.session.user });
+    });
+});
+
+app.post('/users/:id', isLoggedIn, isAdmin, async (req, res) => {
+    const userId = req.params.id;
+    const { username, email, role, password } = req.body;
+    if (parseInt(userId) === req.session.user.id) {
+        return res.status(403).send('You cannot edit your own account');
+    }
+    
+    if (!username || !email || !role) {
+        return res.status(400).send('Username, email, and role are required');
+    }
+    
+    const validRoles = ['admin', 'user'];
+    if (!validRoles.includes(role)) {
+        return res.status(400).send('Invalid role');
+    }
+    
+    try {
+        let updateQuery = 'UPDATE users SET username = ?, email = ?, role = ?';
+        let queryParams = [username, email, role];
+        if (password && password.trim() !== '') {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updateQuery += ', password = ?';
+            queryParams.push(hashedPassword);
+        }
+        
+        updateQuery += ' WHERE id = ?';
+        queryParams.push(userId);
+        
+        db.query(updateQuery, queryParams, (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Database error');
+            }
+            res.redirect('/admin');
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+});
+
+app.post('/users/:id/delete', isLoggedIn, isAdmin, (req, res) => {
+    const userId = req.params.id;
+    if (parseInt(userId) === req.session.user.id) {
+        return res.status(403).send('You cannot delete your own account');
+    }
+    
+    db.query('DELETE FROM users WHERE id = ?', [userId], (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        res.redirect('/admin');
+    });
+});
+
 app.get('/toys/new', isLoggedIn, isAdmin, (req, res) => {
     res.render('toys/new', { user: req.session.user });
 });
@@ -321,7 +395,83 @@ app.get('/toys/search', isLoggedIn, (req, res) => {
         res.render('toys/index', { toys, user: req.session.user });
     });
 });
-
+app.post('/add-to-cart/:id', isLoggedIn, (req, res) => {
+    const productId = parseInt(req.params.id);
+    const quantity = parseInt(req.body.quantity) || 1;
+ 
+    if (isNaN(productId) || productId <= 0 || isNaN(quantity) || quantity <= 0) {
+        return res.status(400).send('Invalid product ID or quantity.');
+    }
+ 
+    db.query('SELECT * FROM toys WHERE ProductID = ?', [productId], (error, results) => {
+        if (error) {
+            console.error('Error fetching product for cart:', error);
+            return res.status(500).send('An error occurred while adding to cart.');
+        }
+ 
+        if (results.length > 0) {
+            const product = results[0];
+ 
+            if (!req.session.cart) {
+                req.session.cart = [];
+            }
+ 
+            const existingItem = req.session.cart.find(item => item.productId === productId);
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                req.session.cart.push({
+                    productId: product.ProductID,
+                    productName: product.ProductName,
+                    price: product.Price,
+                    quantity: quantity,
+                    image: product.Image
+                });
+            }
+ 
+            res.redirect('/cart');
+        } else {
+            res.status(404).send("Product not found.");
+        }
+    });
+});
+ 
+app.post('/remove-from-cart/:id', isLoggedIn, (req, res) => {
+    const productIdToRemove = parseInt(req.params.id);
+ 
+    if (!req.session.cart) {
+        return res.redirect('/cart');
+    }
+ 
+    req.session.cart = req.session.cart.filter(item => item.productId !== productIdToRemove);
+    res.redirect('/cart');
+});
+ 
+app.post('/update-cart-quantity/:id', isLoggedIn, (req, res) => {
+    const productIdToUpdate = parseInt(req.params.id);
+    const newQuantity = parseInt(req.body.quantity);
+ 
+    if (isNaN(newQuantity) || newQuantity < 1) {
+        return res.status(400).send('Quantity must be a positive number.');
+    }
+ 
+    if (!req.session.cart) {
+        return res.redirect('/cart');
+    }
+ 
+    const itemToUpdate = req.session.cart.find(item => item.productId === productIdToUpdate);
+ 
+    if (itemToUpdate) {
+        itemToUpdate.quantity = newQuantity;
+    }
+    res.redirect('/cart');
+});
+ 
+app.get('/cart', isLoggedIn, (req, res) => {
+    const cart = req.session.cart || [];
+    res.render('cart', { cart, user: req.session.user });
+});
+ 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
