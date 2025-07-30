@@ -44,6 +44,7 @@ const db = mysql.createConnection({
     password: '5a49db4b01b0fd0a8023c3da5e90007105eed760',
     database: 'Team2CA2_swimmingbe',
     port: 3307,
+    connectionLimit: 10
 });
 
 db.connect((err) => {

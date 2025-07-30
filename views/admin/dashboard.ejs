@@ -49,11 +49,11 @@
                                         <td>
                                             <% if (userItem.id !== user.id) { %>
                                                 <div class="d-flex gap-1">
-                                                    <a href="/users/<%= userItem.id %>/edit" class="btn btn-primary btn-sm" title="Edit User">
+                                                    <a href="/users/<%= user.id %>/edit" class="btn btn-primary btn-sm" title="Edit User">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                     <button class="btn btn-danger btn-sm" 
-                                                            onclick="confirmUserDelete('<%= userItem.id %>', '<%= userItem.username %>')" 
+                                                            onclick="confirmUserDelete('<%= user.id %>', '<%= user.username %>')" 
                                                             title="Delete User">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
