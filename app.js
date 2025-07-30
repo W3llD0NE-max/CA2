@@ -99,7 +99,7 @@ app.post('/login', (req, res) => {
     db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
         if (err) throw err;
         if (results.length > 0 && await bcrypt.compare(password, results[0].password)) {
-            req.session.user = { id: results[0].id, username: results[0].username, role: results[0].role };
+            req.session.user = { username: results[0].username, email: results[0].email, role: results[0].role };
             res.redirect('/dashboard');
         } else {
             res.render('login-fail'); 
